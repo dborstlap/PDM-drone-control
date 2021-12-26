@@ -23,6 +23,7 @@ class Meteorite:
 
     def update_position(self, dt):
         self.pos[-1] = self.pos[-1] - self.vel[-1] * dt
+<<<<<<< HEAD
 
     def display(self, scr, colors, view_angles, origin, scale):
         screen_pos = projection(self.pos, view_angles, origin, scale)
@@ -48,3 +49,9 @@ class Cuboid:
             pg.draw.line(scr, colors.white,
                          projection(self.vertices[edge[0]], view_angles, origin, scale),
                          projection(self.vertices[edge[1]], view_angles, origin, scale), 4)
+=======
+
+    def display(self, scr, colors, view_angles, origin, scale):
+        screen_pos = projection(self.pos, view_angles, origin, scale)
+        pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
+>>>>>>> cefee8275eb5ae75fb2fe99f529df78643034bde

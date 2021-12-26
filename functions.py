@@ -76,7 +76,7 @@ def pressed_keys():
     return keys
 
 # Color class predefines a bunch of nice colors
-class def_colors:
+class Colors:
   def __init__(self):
     self.white = (255,255,255)
     self.lightgrey = (208,208,208)
@@ -94,4 +94,4 @@ class def_colors:
     self.purple = (189,124,221)
     self.magenta = (225,143,218)
     self.pink = (240,181,211)
-colors = def_colors()
+colors = Colors()
