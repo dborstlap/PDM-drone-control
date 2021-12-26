@@ -6,7 +6,7 @@ function: This file can simulate and visualize the drone in pygame
 
 # ------------------------- IMPORTS --------------------------------
 
-from math import sin,cos
+from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg

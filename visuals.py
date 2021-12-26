@@ -4,9 +4,9 @@ authors:  Dries, Wesley, Tanya, Koen
 function: Contains the drone model
 """
 
-#---------------------------- IMPORTS ---------------------------------
+# ---------------------------- IMPORTS ---------------------------------
 
-from math import sin,cos
+from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg
@@ -31,8 +31,9 @@ from functions import rotation_matrix, projection, depth_scale, pressed_keys, co
 #---------------------------- EXPLOSION ---------------------------------
 explosion_images = []
 for num in range(1, 6):
-	img = pg.image.load(f"explosion/exp"+str(num)+".png")
-	explosion_images.append(img)
+    img = pg.image.load(f"explosion/exp" + str(num) + ".png")
+    explosion_images.append(img)
+
 
 def display_explosion(scr, scale, colission, pos, dt, localtime, view_angles, origin):
     if colission:
@@ -42,8 +43,8 @@ def display_explosion(scr, scale, colission, pos, dt, localtime, view_angles, or
 
     if int(localtime) < 5:
         img = explosion_images[int(localtime)]
-        img = pg.transform.scale(img, (scale/10, scale/10))
-        pos_screen = projection(pos,view_angles,origin,scale)
+        img = pg.transform.scale(img, (int(scale / 10), int(scale / 10)))
+        pos_screen = projection(pos, view_angles, origin, scale)
         rect = img.get_rect()
         rect.center = [pos_screen[0], pos_screen[1]]
         scr.blit(img, rect)
@@ -66,8 +67,8 @@ class Cuboid:
 
     def display(self, scr, colors, view_angles, origin, scale):
         for edge in self.edges:
-            pg.draw.line(scr, colors.white, 
-                         projection(self.vertices[edge[0]],view_angles,origin,scale), 
+            pg.draw.line(scr, colors.white,
+                         projection(self.vertices[edge[0]],view_angles,origin,scale),
                          projection(self.vertices[edge[1]],view_angles,origin,scale), 4)
 
 
