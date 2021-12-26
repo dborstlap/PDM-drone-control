@@ -14,7 +14,7 @@ import pygame as pg
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
 
 #--------------------------- DRONE CLASS ---------------------------------
-class drone:
+class Drone:
     # Initialize some drone parameters
     def __init__(self, X):
         self.X = np.array(X)

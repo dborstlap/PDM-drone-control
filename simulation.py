@@ -13,9 +13,9 @@ import pygame as pg
 pg.init()
 
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
-from model import drone
-from obstacles import meteorite, cuboid
-from visuals import display_explosion
+from model import Drone
+from obstacles import Meteorite
+from visuals import display_explosion, Cuboid
 
 
 # -------------------------- VARIABLES -------------------------------------------
@@ -35,18 +35,25 @@ meteorites = []
 meteorite_counter = 0
 mouse_position = pg.mouse.get_pos()
 text_fonts = [pg.font.SysFont('HELVETICA', i, bold=True, italic=False) for i in range(40)]
-bbox = cuboid([15,10,10])
+bbox = Cuboid([15,10,10])
 meteorite_frequency = 5   # amout of meteorites per second that are created
 colission = 0
 localtime = 100
+
+real_time = True          # If TRUE, simulation runs in real time. If FALSE, simulation will run as fast as possible (as fast as computer can do the calculations)
+dt = 0.1                  # delta t, time interval per iteration
 
 # ------------------------------ RUN LOOP ---------------------------------------
 tprev = pg.time.get_ticks()*0.001
 running = True
 while running:
     time = pg.time.get_ticks()*0.001
-    dt = time-tprev
+    dt_real = time-tprev
     tprev = time
+
+    time_difference = int((dt-dt_real)*1000) # how much faster the computer computes the iteration then the defined dt per iteration (in µs)
+    if time_difference > 0 and real_time == True:
+        pg.time.delay(time_difference)
 
     # ----------- 3D mouse controls ---------------
     events = pg.event.get()
@@ -74,7 +81,7 @@ while running:
     #--------------------------- meteorites ---------------------------
     while meteorite_counter < int(time*meteorite_frequency):
         meteorite_counter += 1
-        meteorites.append(meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
+        meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
                                     [0, 0, rd.uniform(1.,2.)], 
                                      rd.uniform(0.2,0.5)))
         
@@ -84,7 +91,7 @@ while running:
 
     #--------------------------- drone ---------------------------
     X = [5,5,5,0,0,0]
-    drone1 = drone(X)
+    drone1 = Drone(X)
 
 
     # ---------- DISPLAY STUFF -------------------
