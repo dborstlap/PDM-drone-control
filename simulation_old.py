@@ -56,7 +56,7 @@ path_points = np.array([0,0,0])                 # add values to this in the code
 waypoint_number = 0
 
 #--------------------------------------- SET SCREEN ---------------------------
-fullscreen = True                     # full screen does not seem to work accurately in pygame??
+fullscreen = False                     # full screen does not seem to work accurately in pygame??
 screensize = np.array([1200,600])     # if not fullscreen
 
 if fullscreen: scr = pg.display.set_mode((0,0),pg.FULLSCREEN)
