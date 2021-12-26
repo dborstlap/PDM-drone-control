@@ -15,6 +15,12 @@ import constants
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
 
 
+l = 0.10
+omega_max = 2000.0
+k_F = 6.11 * 10**-8
+k_M = 1.5 * 10**-9
+
+
 # --------------------------- DRONE CLASS ---------------------------------
 class Drone:
     m = 1
@@ -58,8 +64,18 @@ class Drone:
 
     D = np.zeros((6, 4))
 
-    u_min = np.zeros(4)
-    u_max = np.zeros(4)
+    u_min = np.array([
+        0,
+        -l * k_F * omega_max ** 2,
+        -l * k_F * omega_max ** 2,
+        -2 * k_M * omega_max ** 2
+    ])
+    u_max = np.array([
+        4 * k_F * omega_max ** 2,
+        l * k_F * omega_max ** 2,
+        l * k_F * omega_max ** 2,
+        2 * k_M * omega_max ** 2
+    ])
 
     # Initialize some drone parameters
     def __init__(self, X):
