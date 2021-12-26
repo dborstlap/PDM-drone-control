@@ -58,6 +58,9 @@ class Drone:
 
     D = np.zeros((6, 4))
 
+    u_min = np.zeros(4)
+    u_max = np.zeros(4)
+
     # Initialize some drone parameters
     def __init__(self, X):
         self.X = np.array(X)
