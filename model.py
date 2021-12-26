@@ -14,11 +14,10 @@ import pygame as pg
 import constants
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
 
-
 l = 0.10
 omega_max = 2000.0
-k_F = 6.11 * 10**-8
-k_M = 1.5 * 10**-9
+k_F = 6.11 * 10 ** -8
+k_M = 1.5 * 10 ** -9
 
 
 # --------------------------- DRONE CLASS ---------------------------------
@@ -55,9 +54,9 @@ class Drone:
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
-        [0, 1/J[0, 0], 0, 0],
-        [0, 0, 1/J[1, 1], 0],
-        [0, 0, 0, 1/J[2, 2]]
+        [0, 1 / J[0, 0], 0, 0],
+        [0, 0, 1 / J[1, 1], 0],
+        [0, 0, 0, 1 / J[2, 2]]
     ]) * constants.dt
 
     C = np.eye(6)
