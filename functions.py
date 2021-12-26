@@ -1,12 +1,20 @@
-########### This file contains some functions used for the drone simulation ###############################
+""" 
+name:     functions.py
+authors:  Dries, Wesley, Tanya, Koen
+function: This file contains a bunch of handy dandy function used in other files
+"""
 
-import pygame as pg
+
+# ------------------------- IMPORTS --------------------------------
+
+from math import sin,cos
 import numpy as np
-from math import cos,sin
+import random as rd
+import pygame as pg
 
+# ------------------------- HELP FUNCTIONS --------------------------------
 
-
-
+# The good stuff, the one and only rotation matrix we all know and like (oke maybe not that last part)
 def rotation_matrix(angles):
     theta = angles[0]    # pitch  (x-axis)
     sigma = angles[1]    # roll   (y-axis)
@@ -27,7 +35,7 @@ def rotation_matrix(angles):
     return np.dot(np.dot(Z_rotation, Y_rotation), X_rotation)
 
 
-
+# projects 3D points on 2D screen
 def projection(point,view_angles,origin,scale):
     rotated_point = np.dot(rotation_matrix(view_angles), point)
     projection_matrix = [[1, 0, 0],
@@ -35,38 +43,40 @@ def projection(point,view_angles,origin,scale):
     return scale * depth_scale(point,view_angles, scale) * np.dot(projection_matrix,rotated_point) + origin
 
 
+# scale objects with depth (for realistic 3d visualisation)
 def depth_scale(point,view_angles, scale):
     rotated_point = np.dot(rotation_matrix(view_angles), point)
     return 1 / (30+rotated_point[2])
 
 
-
+# checks which keys are pressed. Keys can then be used as input for things like manual control
 def pressed_keys():
     pressed_key = pg.key.get_pressed()
     keys = []
-    if pressed_key[pg.K_UP]:
+    if pressed_key[pg.K_UP]:      # up arrow
       keys.append('up')
-    if pressed_key[pg.K_RIGHT]:
+    if pressed_key[pg.K_RIGHT]:   # right arrow
       keys.append('right')
-    if pressed_key[pg.K_DOWN]:
+    if pressed_key[pg.K_DOWN]:    # down arrow
       keys.append('down')
-    if pressed_key[pg.K_LEFT]:
+    if pressed_key[pg.K_LEFT]:    # left arrow
       keys.append('left')
-    if pressed_key[pg.K_w]:
+    if pressed_key[pg.K_w]:       # w key
       keys.append('w')
-    if pressed_key[pg.K_d]:
+    if pressed_key[pg.K_d]:       # d key
       keys.append('d')
-    if pressed_key[pg.K_s]:
+    if pressed_key[pg.K_s]:       # s key
       keys.append('s')
-    if pressed_key[pg.K_a]:
+    if pressed_key[pg.K_a]:       # a key
       keys.append('a')
-    if pressed_key[pg.K_q]:
+    if pressed_key[pg.K_q]:       # q key
       keys.append('q')
-    if pressed_key[pg.K_e]:
+    if pressed_key[pg.K_e]:       # e key
       keys.append('e')
     return keys
 
-class colors:
+# Color class predefines a bunch of nice colors
+class def_colors:
   def __init__(self):
     self.white = (255,255,255)
     self.lightgrey = (208,208,208)
@@ -84,4 +94,4 @@ class colors:
     self.purple = (189,124,221)
     self.magenta = (225,143,218)
     self.pink = (240,181,211)
-color = colors()
+colors = def_colors()

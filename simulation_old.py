@@ -9,7 +9,7 @@ pg.init()
 
 #------------------------------------ INITIAL VARIABLES -----------------------
 # control mode
-manual_control = True
+manual_control = False
 
 # path (for now only visualization, no path finding)
 waypoints = np.array([[1,1,1],[5,1,3],[-1,4,2]])        # waypoints drone will go to in order. First one is starting position
