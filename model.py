@@ -90,41 +90,47 @@ class Drone:
         self.pos = np.array([X[0], X[1], X[2]])
         self.drone_rotation_matrix = np.eye(3)
 
-    def state_timestep(self, inputs):
+    def state_timestep(self, inputs, model='non-linear'):
         """
         Calculates the next state from the current state and the inputs using Euler integration on the dynamical model
         :param inputs: array or list containing the 4 inputs
+        :param model: linear or non-linear, defaults to non-linear
         """
         state_updated = np.zeros(12)
-        state_updated[0] = self.state[0] + self.state[3] * constants.dt
-        state_updated[1] = self.state[1] + self.state[4] * constants.dt
-        state_updated[2] = self.state[2] + self.state[5] * constants.dt
-        state_updated[3] = inputs[0] / self.m * (
-                cos(self.state[8]) * sin(self.state[7]) +
-                cos(self.state[7]) * sin(self.state[6]) * sin(self.state[8])
-        ) * constants.dt
-        state_updated[4] = inputs[0] / self.m * (
-                sin(self.state[8]) * sin(self.state[7]) -
-                cos(self.state[8]) * cos(self.state[7]) * sin(self.state[6])
-        ) * constants.dt
-        state_updated[5] = inputs[0] / self.m * (
-                cos(self.state[6]) * cos(self.state[7])
-        ) * constants.dt - constants.g * constants.dt
-        state_updated[6] = self.state[6] + self.state[9] * constants.dt
-        state_updated[7] = self.state[7] + self.state[10] * constants.dt
-        state_updated[8] = self.state[8] + self.state[11] * constants.dt
-        state_updated[9] = (
-                ((-self.J[1, 1] + self.J[2, 2]) / self.J[0, 0]) * self.state[7] * self.state[8] +
-                inputs[1] / self.J[0, 0]
-        ) * constants.dt
-        state_updated[10] = (
-                ((self.J[0, 0] - self.J[2, 2]) / self.J[1, 1]) * self.state[6] * self.state[8] +
-                inputs[2] / self.J[1, 1]
-        ) * constants.dt
-        state_updated[11] = (
-                ((-self.J[0, 0] + self.J[1, 1]) / self.J[2, 2]) * self.state[6] * self.state[7] +
-                inputs[3] / self.J[2, 2]
-        ) * constants.dt
+
+        if model == 'non-linear':
+            state_updated[0] = self.state[0] + self.state[3] * constants.dt
+            state_updated[1] = self.state[1] + self.state[4] * constants.dt
+            state_updated[2] = self.state[2] + self.state[5] * constants.dt
+            state_updated[3] = inputs[0] / self.m * (
+                    cos(self.state[8]) * sin(self.state[7]) +
+                    cos(self.state[7]) * sin(self.state[6]) * sin(self.state[8])
+            ) * constants.dt
+            state_updated[4] = inputs[0] / self.m * (
+                    sin(self.state[8]) * sin(self.state[7]) -
+                    cos(self.state[8]) * cos(self.state[7]) * sin(self.state[6])
+            ) * constants.dt
+            state_updated[5] = inputs[0] / self.m * (
+                    cos(self.state[6]) * cos(self.state[7])
+            ) * constants.dt - constants.g * constants.dt
+            state_updated[6] = self.state[6] + self.state[9] * constants.dt
+            state_updated[7] = self.state[7] + self.state[10] * constants.dt
+            state_updated[8] = self.state[8] + self.state[11] * constants.dt
+            state_updated[9] = (
+                    ((-self.J[1, 1] + self.J[2, 2]) / self.J[0, 0]) * self.state[7] * self.state[8] +
+                    inputs[1] / self.J[0, 0]
+            ) * constants.dt
+            state_updated[10] = (
+                    ((self.J[0, 0] - self.J[2, 2]) / self.J[1, 1]) * self.state[6] * self.state[8] +
+                    inputs[2] / self.J[1, 1]
+            ) * constants.dt
+            state_updated[11] = (
+                    ((-self.J[0, 0] + self.J[1, 1]) / self.J[2, 2]) * self.state[6] * self.state[7] +
+                    inputs[3] / self.J[2, 2]
+            ) * constants.dt
+        else:
+            state_updated = self.A @ self.state + self.B @ inputs + self.G
+
         self.state = state_updated
 
     # Update the position (and state space?) of the drone
@@ -180,7 +186,7 @@ for i in range(20):
     # print('y', x[1])
     # print('z', x[2])
 
-    quad.state_timestep(u)
-    print('quad state', quad.state[:3])
+    quad.state_timestep(u, model='linear')
+    print('quad state', quad.state)
     print('')
     print('')
