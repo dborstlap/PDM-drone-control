@@ -1,9 +1,8 @@
 import numpy as np
 import cvxpy as cp
-import constants
 
 Q = np.eye(3)
-R = np.ones(4) * 0.3
+R = np.eye(4) * 0.3
 
 
 def mpc(quadrotor, x_current, x_target, horizon=50):
@@ -24,9 +23,12 @@ def mpc(quadrotor, x_current, x_target, horizon=50):
 
     # cost and constraints at each time step
     for n in range(horizon):
-        cost += cp.quad_form((x[0:2, n + 1] - x_target), Q)
+        # cost of position
+        cost += cp.quad_form((x[:3, n + 1] - x_target[:3]), Q)
+        # cost of velocity
+        cost += cp.quad_form((x[6:9, n + 1] - x_target[6:9]), Q)
         cost += cp.quad_form(u[:, n], R)
-        constraints += [x[:, n + 1] == quadrotor.A @ x[:, n] + quadrotor.B @ u[:, n]]
+        constraints += [x[:, n + 1] == quadrotor.A @ x[:, n] + quadrotor.B @ u[:, n] + quadrotor.G]
         constraints += [u[:, n] >= quadrotor.u_min]
         constraints += [u[:, n] <= quadrotor.u_max]
 

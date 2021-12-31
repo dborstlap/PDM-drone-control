@@ -14,7 +14,7 @@ pg.init()
 
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
 from model import Drone
-from obstacles import Meteorite
+from obstacles import Meteorite, Cuboid
 from visuals import display_explosion
 
 

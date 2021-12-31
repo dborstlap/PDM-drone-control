@@ -5,35 +5,39 @@ function: Contains the drone model
 """
 
 # ---------------------------- IMPORTS ---------------------------------
-
+import math
 from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg
 
 import constants
+import solver
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
-
-l = 0.10
-omega_max = 2000.0
-k_F = 6.11 * 10 ** -8
-k_M = 1.5 * 10 ** -9
 
 
 # --------------------------- DRONE CLASS ---------------------------------
 class Drone:
-    m = 1
-    J = np.array([
-        [1.1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1.7]
-    ]) * 10 ** (-3)
+    m = 0.030
+    arm_length = 0.046
+    k_F = 6.11 * 10 ** -8
+    k_M = 1.5 * 10 ** -9
+    # J = np.array([
+    #     [1.1, 0, 0],
+    #     [0, 1, 0],
+    #     [0, 0, 1.7]
+    # ]) * 10 ** (-3)
+    J = np.diag([1.43, 1.43, 2.89]) * 10 ** -5
+    F_max = 2.5 * m * constants.g
+    psi_max = 2 / 9 * math.pi
+    omega_max = math.sqrt(F_max / (4 * k_F))
+    # omega_max = 2500
 
     A = np.eye(12) + np.array([
         [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, -constants.g, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, constants.g, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, -constants.g, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
@@ -63,24 +67,65 @@ class Drone:
 
     D = np.zeros((6, 4))
 
+    G = np.array([0, 0, 0, 0, 0, -constants.g, 0, 0, 0, 0, 0, 0]) * constants.dt
+
     u_min = np.array([
         0,
-        -l * k_F * omega_max ** 2,
-        -l * k_F * omega_max ** 2,
+        -arm_length * k_F * omega_max ** 2,
+        -arm_length * k_F * omega_max ** 2,
         -2 * k_M * omega_max ** 2
     ])
     u_max = np.array([
-        4 * k_F * omega_max ** 2,
-        l * k_F * omega_max ** 2,
-        l * k_F * omega_max ** 2,
+        F_max,
+        arm_length * k_F * omega_max ** 2,
+        arm_length * k_F * omega_max ** 2,
         2 * k_M * omega_max ** 2
     ])
+
+    state = np.zeros(12)
 
     # Initialize some drone parameters
     def __init__(self, X):
         self.X = np.array(X)
         self.pos = np.array([X[0], X[1], X[2]])
         self.drone_rotation_matrix = np.eye(3)
+
+    def state_timestep(self, inputs):
+        """
+        Calculates the next state from the current state and the inputs using Euler integration on the dynamical model
+        :param inputs: array or list containing the 4 inputs
+        """
+        state_updated = np.zeros(12)
+        state_updated[0] = self.state[0] + self.state[3] * constants.dt
+        state_updated[1] = self.state[1] + self.state[4] * constants.dt
+        state_updated[2] = self.state[2] + self.state[5] * constants.dt
+        state_updated[3] = inputs[0] / self.m * (
+                cos(self.state[8]) * sin(self.state[7]) +
+                cos(self.state[7]) * sin(self.state[6]) * sin(self.state[8])
+        ) * constants.dt
+        state_updated[4] = inputs[0] / self.m * (
+                sin(self.state[8]) * sin(self.state[7]) -
+                cos(self.state[8]) * cos(self.state[7]) * sin(self.state[6])
+        ) * constants.dt
+        state_updated[5] = inputs[0] / self.m * (
+                cos(self.state[6]) * cos(self.state[7])
+        ) * constants.dt - constants.g * constants.dt
+        state_updated[6] = self.state[6] + self.state[9] * constants.dt
+        state_updated[7] = self.state[7] + self.state[10] * constants.dt
+        state_updated[8] = self.state[8] + self.state[11] * constants.dt
+        state_updated[9] = (
+                ((-self.J[1, 1] + self.J[2, 2]) / self.J[0, 0]) * self.state[7] * self.state[8] +
+                inputs[1] / self.J[0, 0]
+        ) * constants.dt
+        state_updated[10] = (
+                ((self.J[0, 0] - self.J[2, 2]) / self.J[1, 1]) * self.state[6] * self.state[8] +
+                inputs[2] / self.J[1, 1]
+        ) * constants.dt
+        state_updated[11] = (
+                ((-self.J[0, 0] + self.J[1, 1]) / self.J[2, 2]) * self.state[6] * self.state[7] +
+                inputs[3] / self.J[2, 2]
+        ) * constants.dt
+        self.state = state_updated
 
     # Update the position (and state space?) of the drone
     def update_position(self):
@@ -119,3 +164,23 @@ class Drone:
                 projected_circle_pos = projection(circle_pos, view_angles, origin, scale)
                 projected_circle_pos = [int(round(projected_circle_pos[0])), int(round(projected_circle_pos[1]))]
                 pg.draw.circle(scr, colors.white, projected_circle_pos, 1)
+
+
+# for testing only
+x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+quad = Drone([0, 0, 0, 0, 0, 0])
+
+for i in range(20):
+    print('iteration', i)
+
+    u, x = solver.mpc(quad, quad.state, x_target)
+    print('u', u)
+    # print('x', x[0])
+    # print('y', x[1])
+    # print('z', x[2])
+
+    quad.state_timestep(u)
+    print('quad state', quad.state[:3])
+    print('')
+    print('')
