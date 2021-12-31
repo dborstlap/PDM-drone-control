@@ -90,7 +90,7 @@ class Drone:
         self.pos = np.array([X[0], X[1], X[2]])
         self.drone_rotation_matrix = np.eye(3)
 
-    def state_timestep(self, inputs, model='non-linear'):
+    def update_state(self, inputs, model='non-linear'):
         """
         Calculates the next state from the current state and the inputs using Euler integration on the dynamical model
         :param inputs: array or list containing the 4 inputs
@@ -132,10 +132,6 @@ class Drone:
             state_updated = self.A @ self.state + self.B @ inputs + self.G
 
         self.state = state_updated
-
-    # Update the position (and state space?) of the drone
-    def update_position(self):
-        self.X = self.X
 
     # Function to display the drone in pygame
     def display(self, scr, colors, view_angles, origin, scale):
@@ -186,7 +182,7 @@ for i in range(20):
     # print('y', x[1])
     # print('z', x[2])
 
-    quad.state_timestep(u, model='linear')
+    quad.update_state(u, model='linear')
     print('quad state', quad.state)
     print('')
     print('')
