@@ -32,6 +32,8 @@ def mpc(quadrotor, x_current, x_target, horizon=50):
         constraints += [u[:, n] >= quadrotor.u_min]
         constraints += [u[:, n] <= quadrotor.u_max]
         constraints += [x[2, n] >= 0]
+        constraints += [x[6:9, n] <= np.array([quadrotor.phi_max, quadrotor.theta_max, quadrotor.omega_max])]
+        constraints += [x[6:9, n] >= -np.array([quadrotor.phi_max, quadrotor.theta_max, quadrotor.omega_max])]
 
     # constraints valid for all time steps
     constraints += [x[:, 0] == x_current]

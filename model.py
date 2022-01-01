@@ -29,6 +29,9 @@ class Drone:
     # ]) * 10 ** (-3)
     J = np.diag([1.43, 1.43, 2.89]) * 10 ** -5
     F_max = 2.5 * m * constants.g
+
+    phi_max = math.asin(m * constants.g)
+    theta_max = phi_max
     psi_max = 2 / 9 * math.pi
     omega_max = math.sqrt(F_max / (4 * k_F))
     # omega_max = 2500
@@ -169,7 +172,7 @@ class Drone:
 
 # for testing only
 x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [1, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
 
 for i in range(20):
