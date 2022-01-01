@@ -96,42 +96,41 @@ class Drone:
         :param inputs: array or list containing the 4 inputs
         :param model: linear or non-linear, defaults to non-linear
         """
-        state_updated = np.zeros(12)
-
         if model == 'non-linear':
-            state_updated[0] = self.state[0] + self.state[3] * constants.dt
-            state_updated[1] = self.state[1] + self.state[4] * constants.dt
-            state_updated[2] = self.state[2] + self.state[5] * constants.dt
-            state_updated[3] = inputs[0] / self.m * (
+            state_derivative = np.zeros(12)
+            state_derivative[0] = self.state[3]
+            state_derivative[1] = self.state[4]
+            state_derivative[2] = self.state[5]
+            state_derivative[3] = inputs[0] / self.m * (
                     cos(self.state[8]) * sin(self.state[7]) +
                     cos(self.state[7]) * sin(self.state[6]) * sin(self.state[8])
-            ) * constants.dt
-            state_updated[4] = inputs[0] / self.m * (
+            )
+            state_derivative[4] = inputs[0] / self.m * (
                     sin(self.state[8]) * sin(self.state[7]) -
                     cos(self.state[8]) * cos(self.state[7]) * sin(self.state[6])
-            ) * constants.dt
-            state_updated[5] = inputs[0] / self.m * (
+            )
+            state_derivative[5] = inputs[0] / self.m * (
                     cos(self.state[6]) * cos(self.state[7])
-            ) * constants.dt - constants.g * constants.dt
-            state_updated[6] = self.state[6] + self.state[9] * constants.dt
-            state_updated[7] = self.state[7] + self.state[10] * constants.dt
-            state_updated[8] = self.state[8] + self.state[11] * constants.dt
-            state_updated[9] = (
+            ) - constants.g
+            state_derivative[6] = self.state[9]
+            state_derivative[7] = self.state[10]
+            state_derivative[8] = self.state[11]
+            state_derivative[9] = (
                     ((-self.J[1, 1] + self.J[2, 2]) / self.J[0, 0]) * self.state[7] * self.state[8] +
                     inputs[1] / self.J[0, 0]
-            ) * constants.dt
-            state_updated[10] = (
+            )
+            state_derivative[10] = (
                     ((self.J[0, 0] - self.J[2, 2]) / self.J[1, 1]) * self.state[6] * self.state[8] +
                     inputs[2] / self.J[1, 1]
-            ) * constants.dt
-            state_updated[11] = (
+            )
+            state_derivative[11] = (
                     ((-self.J[0, 0] + self.J[1, 1]) / self.J[2, 2]) * self.state[6] * self.state[7] +
                     inputs[3] / self.J[2, 2]
-            ) * constants.dt
-        else:
-            state_updated = self.A @ self.state + self.B @ inputs + self.G
+            )
 
-        self.state = state_updated
+            self.state = self.state + state_derivative * constants.dt
+        else:
+            self.state = self.A @ self.state + self.B @ inputs + self.G
 
     # Function to display the drone in pygame
     def display(self, scr, colors, view_angles, origin, scale):
@@ -170,7 +169,7 @@ class Drone:
 
 # for testing only
 x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [1, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
 
 for i in range(20):
@@ -182,7 +181,7 @@ for i in range(20):
     # print('y', x[1])
     # print('z', x[2])
 
-    quad.update_state(u, model='linear')
+    quad.update_state(u, model='non-linear')
     print('quad state', quad.state)
     print('')
     print('')
