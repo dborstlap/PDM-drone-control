@@ -23,6 +23,7 @@ def mpc(quadrotor, x_current, x_target, horizon=20):
     x = cp.Variable((12, horizon + 1))
     u = cp.Variable((4, horizon))
     obstacle = cp.Variable((6, horizon), boolean=True)
+    slack = -10000
 
     # cost and constraints at each time step
     for n in range(horizon):
@@ -38,12 +39,12 @@ def mpc(quadrotor, x_current, x_target, horizon=20):
         constraints += [x[6:9, n] <= np.array([quadrotor.phi_max, quadrotor.theta_max, quadrotor.omega_max])]
         constraints += [x[6:9, n] >= -np.array([quadrotor.phi_max, quadrotor.theta_max, quadrotor.omega_max])]
 
-        constraints += [1 - x[0, n] >= -10000 * obstacle[0, n]]
-        constraints += [x[0, n] - 2 >= -10000 * obstacle[1, n]]
-        constraints += [1 - x[1, n] >= -10000 * obstacle[2, n]]
-        constraints += [x[1, n] - 2 >= -10000 * obstacle[3, n]]
-        constraints += [0.25 - x[2, n] >= -10000 * obstacle[4, n]]
-        constraints += [x[2, n] - 2 >= -10000 * obstacle[5, n]]
+        constraints += [1 - x[0, n] >= slack * obstacle[0, n]]
+        constraints += [x[0, n] - 2 >= slack * obstacle[1, n]]
+        constraints += [1 - x[1, n] >= slack * obstacle[2, n]]
+        constraints += [x[1, n] - 2 >= slack * obstacle[3, n]]
+        constraints += [-1 - x[2, n] >= slack * obstacle[4, n]]
+        constraints += [x[2, n] - 1 >= slack * obstacle[5, n]]
         constraints += [(obstacle[0, n] + obstacle[1, n]
                          + obstacle[2, n] + obstacle[3, n]
                          + obstacle[4, n] + obstacle[5, n]
@@ -54,6 +55,9 @@ def mpc(quadrotor, x_current, x_target, horizon=20):
 
     # run solver
     problem = cp.Problem(cp.Minimize(cost), constraints)
-    problem.solve(solver=cp.CPLEX, verbose=False)
+
+    # N.B.!
+    # pip install cplex docplex
+    problem.solve(solver=cp.CPLEX)
 
     return u[:, 0].value, x[:, :].value
