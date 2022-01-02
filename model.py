@@ -172,7 +172,7 @@ class Drone:
 
 # for testing only
 x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [3, 3, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
 
 for i in range(20):
