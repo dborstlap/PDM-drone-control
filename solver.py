@@ -5,7 +5,7 @@ Q = np.eye(3)
 R = np.eye(4) * 0.3
 
 
-def mpc(quadrotor, x_current, x_target, horizon=50):
+def mpc(quadrotor, x_current, x_target, obstacles, horizon=50):
     """
     Run the MPC solver for the given quadrotor from current location. The solver will try to close the distance to
     the target location.
@@ -34,6 +34,8 @@ def mpc(quadrotor, x_current, x_target, horizon=50):
         constraints += [x[2, n] >= 0]
         constraints += [x[6:9, n] <= np.array([quadrotor.phi_max, quadrotor.theta_max, quadrotor.omega_max])]
         constraints += [x[6:9, n] >= -np.array([quadrotor.phi_max, quadrotor.theta_max, quadrotor.omega_max])]
+        for i in range(len(obstacles)):
+            constraints += [obstacles[i].P @ x[:3, n] <= obstacles[i].constraints]
 
     # constraints valid for all time steps
     constraints += [x[:, 0] == x_current]

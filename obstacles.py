@@ -13,7 +13,6 @@ import pygame as pg
 
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
 
-
 # ---------------------------- METEORITE CLASS ---------------------------------
 class Meteorite:
     def __init__(self, pos, vel, size):
@@ -29,7 +28,24 @@ class Meteorite:
         pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
 
 
-# ---------------------------- CUBOID (=prism) CLASS ---------------------------------
+# ---------------------------- Obstacle CLASS ---------------------------------
+
+class Obstacle:
+    # Represents static cuboid obstacle
+    def __init__(self, position, dimensions, safetyfactor, drone_radius):
+        self.pos = np.array(position)
+        self.visual_dimensions = dimensions
+        self.dimensions = safetyfactor*(np.array(dimensions)+drone_radius)
+        self.constraints = np.array([[self.pos[0] + self.dimensions[0]/2],
+                                [self.pos[1] + self.dimensions[1]/2],
+                                [self.pos[2] + self.dimensions[2]/2],
+                                [self.pos[0]*-1 + self.dimensions[0]/2],
+                                [self.pos[1]*-1 + self.dimensions[1]/2],
+                                [self.pos[2]*-1 + self.dimensions[2]/2]]).reshape((6,))
+
+        self.P = np.vstack((np.eye(3), -np.eye(3)))
+
+        # ---------------------------- CUBOID (=prism) CLASS ---------------------------------
 class Cuboid:
     # this part sets all the points x,y,x co-cords at the correct locations
     #  _____   7____6

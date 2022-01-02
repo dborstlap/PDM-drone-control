@@ -10,6 +10,7 @@ from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg
+import obstacles
 
 import constants
 import solver
@@ -29,9 +30,6 @@ class Drone:
     # ]) * 10 ** (-3)
     J = np.diag([1.43, 1.43, 2.89]) * 10 ** -5
     F_max = 2.5 * m * constants.g
-
-    phi_max = math.asin(m * constants.g)
-    theta_max = phi_max
     psi_max = 2 / 9 * math.pi
     omega_max = math.sqrt(F_max / (4 * k_F))
     # omega_max = 2500
@@ -172,13 +170,20 @@ class Drone:
 
 # for testing only
 x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [1, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
+
+# ------------------------------ Obstacles ---------------------------------------
+safetyfactor = 1.5
+drone_radius = 1
+Obstacle_1 = obstacles.Obstacle([5,5,0],[3,3,3],safetyfactor, drone_radius)
+Obstacle_2 = obstacles.Obstacle([10,10,0],[5,5,5], safetyfactor, drone_radius)
+obstacle_list = [Obstacle_1, Obstacle_2]
 
 for i in range(20):
     print('iteration', i)
 
-    u, x = solver.mpc(quad, quad.state, x_target)
+    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list)
     print('u', u)
     # print('x', x[0])
     # print('y', x[1])
