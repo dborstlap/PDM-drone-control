@@ -67,8 +67,6 @@ def mpc(quadrotor, x_current, x_target, horizon=20):
     # run solver
     problem = cp.Problem(cp.Minimize(cost), constraints)
 
-    # N.B.!
-    # pip install cplex docplex
     problem.solve(solver=cp.CPLEX)
 
     return u[:, 0].value, x[:, :].value
