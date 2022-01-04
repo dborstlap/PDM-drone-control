@@ -5,7 +5,7 @@ Q = np.eye(3)
 R = np.eye(4) * 0.3
 
 
-def mpc(quadrotor, x_current, x_target, horizon=20):
+def mpc(quadrotor, x_current, x_target, horizon=50):
     """
     Run the MPC solver for the given quadrotor from current location. The solver will try to close the distance to
     the target location.
@@ -22,7 +22,7 @@ def mpc(quadrotor, x_current, x_target, horizon=20):
     u = cp.Variable((4, horizon))
     obstacle = cp.Variable((6, horizon), boolean=True)
     slack = cp.Variable((6, horizon))
-    slack_penalty = 100
+    slack_penalty = 100000
 
     margin = -1000
 
@@ -52,7 +52,7 @@ def mpc(quadrotor, x_current, x_target, horizon=20):
         constraints += [1 - x[1, n] + slack[2, n] >= margin * obstacle[2, n]]
         constraints += [x[1, n] - 2 + slack[3, n] >= margin * obstacle[3, n]]
         constraints += [-1 - x[2, n] + slack[4, n] >= margin * obstacle[4, n]]
-        constraints += [x[2, n] - 1.5 + slack[5, n] >= margin * obstacle[5, n]]
+        constraints += [x[2, n] - 2.5 + slack[5, n] >= margin * obstacle[5, n]]
         # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
         # least one plane of the obstacle
         constraints += [(obstacle[0, n] + obstacle[1, n]
