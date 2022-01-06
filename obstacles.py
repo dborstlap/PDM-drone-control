@@ -3,6 +3,7 @@ name:     obstacles.py
 authors:  Dries, Wesley, Tanya, Koen
 function: This file contains functions and classes needed to represent and display obstacles
 """
+
 drone_radius = 1
 # ------------------------- IMPORTS --------------------------------
 
@@ -10,9 +11,8 @@ from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg
-
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
-
+import constants
 
 # ---------------------------- METEORITE CLASS ---------------------------------
 class Meteorite:
@@ -23,15 +23,17 @@ class Meteorite:
         self.size = size
 
     def update_position(self, dt):
-        self.pos[-1] = self.pos[-1] - self.vel[-1] * dt
+        self.pos = self.pos + self.vel * dt
 
     def display(self, scr, colors, view_angles, origin, scale):
         screen_pos = projection(self.pos, view_angles, origin, scale)
         pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
 
-    def add_constraints(self, constraints, x, margin, n):
-        constraints += [(x[0,n] - self.pos[0])**2 + (x[1, n] -self.pos[1])**2 + (x[2,n] -self.pos[2])**2 >= self.size * margin + drone_radius]
-        return constraints
+    def add_constraints(self, constraints, x, n, meteorite_slack):
+        print(self.pos)
+        print(self.vel)
+        pos_expected = self.pos + constants.dt * n * self.vel
+        constraints += [(x[0,n] - pos_expected[0])**2 + (x[1, n] - pos_expected[1])**2 + (x[2,n] - pos_expected[2])**2 >= (self.size + meteorite_slack + drone_radius)**2]
 
 class Cuboid_obstacle:
     # Represents static cuboid obstacle
@@ -55,8 +57,7 @@ class Cuboid_obstacle:
         constraints += [x[2, n] - self.cube_constraints[5] + cuboid_slack[5 + j, n] >= margin * obstacle_binary[5 + j, n] + drone_radius]
         # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
         # least one plane of the obstacle
-        constraints += [np.sum( obstacle_binary[j:j+6, n], axis=0) <= 5]
-        return constraints
+        constraints += [np.sum(obstacle_binary[j:j+6, n], axis=0) <= 5]
 
 #        self.dimensions = margin *(np.array(dimensions)+drone_radius)
 #        self.constraints = np.array([[self.pos[0] + self.dimensions[0]/2],

@@ -11,6 +11,7 @@ import numpy as np
 import random as rd
 import pygame as pg
 import obstacles
+import simulation
 
 import constants
 import solver
@@ -177,15 +178,20 @@ x_target = [3, 3, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
 
 drone_radius = 0.5
-###
-obstacle_1 = obstacles.Cuboid_obstacle([5, 5, 0], [3, 3, 3])
+### Obstacles ###
+obstacle_1 = obstacles.Cuboid_obstacle([2, 2, 0], [1, 1, 1])
 obstacle_2 = obstacles.Cuboid_obstacle([10,10,0],[5,5,5])
-obstacle_list = [obstacle_1, obstacle_2]
+obstacle_list = [obstacle_1]
+
+bbox = obstacles.Cuboid([15, 10, 10])
+meteorites = [obstacles.Meteorite([5, 5, 10],
+                                 [0, 0, -1.],
+                                 0.2)]
 
 for i in range(30):
     print('iteration', i)
 
-    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list)
+    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list, meteorites)
     # print('u', u)
     # print('x', x[0])
     # print('y', x[1])

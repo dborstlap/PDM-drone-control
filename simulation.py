@@ -80,7 +80,7 @@ while running:
     while meteorite_counter < int(time*meteorite_frequency):
         meteorite_counter += 1
         meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
-                                    [0, 0, rd.uniform(1.,2.)], 
+                                    -[0, 0, rd.uniform(1.,2.)],
                                      rd.uniform(0.2,0.5)))
         
     for i,m in enumerate(meteorites):

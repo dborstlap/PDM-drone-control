@@ -5,7 +5,7 @@ Q = np.eye(3)
 R = np.eye(4) * 0.3
 
 
-def mpc(quadrotor, x_current, x_target, obstacle_list, horizon=50):
+def mpc(quadrotor, x_current, x_target, obstacle_list, meteorites_list, horizon=50):
     """
     Run the MPC solver for the given quadrotor from current location. The solver will try to close the distance to
     the target location.
@@ -22,6 +22,7 @@ def mpc(quadrotor, x_current, x_target, obstacle_list, horizon=50):
     u = cp.Variable((4, horizon))
     obstacle_binary = cp.Variable((6*len(obstacle_list), horizon), boolean=True)
     cuboid_slack = cp.Variable((6*len(obstacle_list), horizon))
+    meteorite_slack = cp.Variable((len(meteorites_list), horizon))
 
     slack_penalty = 100000
 
@@ -37,6 +38,7 @@ def mpc(quadrotor, x_current, x_target, obstacle_list, horizon=50):
         cost += cp.quad_form(u[:, n], R)
         # cost of using slack
         cost += cp.quad_form(cuboid_slack[:, n], np.eye(6*len(obstacle_list)) * slack_penalty)
+        cost += cp.quad_form(meteorite_slack[:, n], np.eye(len(meteorites_list)) * slack_penalty)
 
         # constraints for quadrotor dynamics and actuation limits
         constraints += [x[:, n + 1] == quadrotor.A @ x[:, n] + quadrotor.B @ u[:, n] + quadrotor.G]
@@ -49,7 +51,10 @@ def mpc(quadrotor, x_current, x_target, obstacle_list, horizon=50):
         # add cuboid obstacles
         for i in range(len(obstacle_list)):
             j = i * 6
-            constraints += obstacle_list[i].add_constraints(x, n, constraints, margin, obstacle_binary, cuboid_slack, j)
+            obstacle_list[i].add_constraints(x, n, constraints, margin, obstacle_binary, cuboid_slack, j)
+
+        for i in range(len(meteorites_list)):
+            meteorites_list[i].add_constraints(constraints, x, n, meteorite_slack)
 
     # constraints valid for all time steps
     constraints += [x[:, 0] == x_current]
