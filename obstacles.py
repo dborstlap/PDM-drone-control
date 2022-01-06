@@ -3,7 +3,7 @@ name:     obstacles.py
 authors:  Dries, Wesley, Tanya, Koen
 function: This file contains functions and classes needed to represent and display obstacles
 """
-
+drone_radius = 1
 # ------------------------- IMPORTS --------------------------------
 
 from math import sin, cos
@@ -16,6 +16,7 @@ from functions import rotation_matrix, projection, depth_scale, pressed_keys, co
 
 # ---------------------------- METEORITE CLASS ---------------------------------
 class Meteorite:
+    # adds a moving
     def __init__(self, pos, vel, size):
         self.pos = np.array(pos)
         self.vel = np.array(vel)
@@ -27,6 +28,45 @@ class Meteorite:
     def display(self, scr, colors, view_angles, origin, scale):
         screen_pos = projection(self.pos, view_angles, origin, scale)
         pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
+
+    def add_constraints(self, constraints, x, margin, n):
+        constraints += [(x[0,n] - self.pos[0])**2 + (x[1, n] -self.pos[1])**2 + (x[2,n] -self.pos[2])**2 >= self.size * margin + drone_radius]
+        return constraints
+
+class Cuboid_obstacle:
+    # Represents static cuboid obstacle
+    def __init__(self, position, dimensions):
+        self.pos = np.array(position)
+        self.dimensions = dimensions
+        self.cube_constraints = np.array([[self.pos[0] * -1 + self.dimensions[0]/2],
+                                          [self.pos[0] + self.dimensions[0] / 2],
+                                          [self.pos[1] * -1 + self.dimensions[1]/2],
+                                          [self.pos[1] + self.dimensions[1] / 2],
+                                          [self.pos[2] * -1 + self.dimensions[2]/2],
+                                          [self.pos[2] + self.dimensions[2]/2]])
+
+    def add_constraints(self, x, n, constraints, margin, obstacle_binary, cuboid_slack, j):
+
+        constraints += [self.cube_constraints[0] - x[0, n] + cuboid_slack[0 + j, n] >= margin * obstacle_binary[0 + j, n] + drone_radius]
+        constraints += [x[0, n] - self.cube_constraints[1] + cuboid_slack[1 + j, n] >= margin * obstacle_binary[1 + j, n] + drone_radius]
+        constraints += [self.cube_constraints[2] - x[1, n] + cuboid_slack[2 + j, n] >= margin * obstacle_binary[2 + j, n] + drone_radius]
+        constraints += [x[1, n] - self.cube_constraints[3] + cuboid_slack[3 + j, n] >= margin * obstacle_binary[3 + j, n] + drone_radius]
+        constraints += [self.cube_constraints[4] - x[2, n] + cuboid_slack[4 + j, n] >= margin * obstacle_binary[4 + j, n] + drone_radius]
+        constraints += [x[2, n] - self.cube_constraints[5] + cuboid_slack[5 + j, n] >= margin * obstacle_binary[5 + j, n] + drone_radius]
+        # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
+        # least one plane of the obstacle
+        constraints += [np.sum( obstacle_binary[j:j+6, n], axis=0) <= 5]
+        return constraints
+
+#        self.dimensions = margin *(np.array(dimensions)+drone_radius)
+#        self.constraints = np.array([[self.pos[0] + self.dimensions[0]/2],
+#                                [self.pos[1] + self.dimensions[1]/2],
+#                                [self.pos[2] + self.dimensions[2]/2],
+#                                [self.pos[0]*-1 + self.dimensions[0]/2],
+#                                [self.pos[1]*-1 + self.dimensions[1]/2],
+#                                [self.pos[2]*-1 + self.dimensions[2]/2]]).reshape((6,))
+
+ #       self.P = np.vstack((np.eye(3), -np.eye(3)))
 
 
 # ---------------------------- CUBOID (=prism) CLASS ---------------------------------

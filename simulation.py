@@ -17,14 +17,12 @@ from model import Drone
 from obstacles import Meteorite, Cuboid
 from visuals import display_explosion
 
-
 # -------------------------- VARIABLES -------------------------------------------
 fullscreen = False # full screen does not seem to work accurately in pygame??
 screensize = np.array([1280,720])     # if not fullscreen
 
 if fullscreen: scr = pg.display.set_mode((0, 0), pg.FULLSCREEN)
 if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
-
 
 scale = 1000
 origin = np.array([100,screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
