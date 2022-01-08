@@ -6,11 +6,12 @@ function: This file contains a bunch of handy dandy function used in other files
 
 
 # ------------------------- IMPORTS --------------------------------
-
 from math import sin,cos
 import numpy as np
 import random as rd
 import pygame as pg
+import cv2
+import os
 
 # ------------------------- HELP FUNCTIONS --------------------------------
 
@@ -95,3 +96,30 @@ class Colors:
     self.magenta = (225,143,218)
     self.pink = (240,181,211)
 colors = Colors()
+
+
+
+def make_video(directory, name, size, fps = 60):
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
+    video = cv2.VideoWriter(name, fourcc, fps, size)    
+    for i, file in enumerate(os.listdir(directory)):
+        if file.endswith(".jpg"):
+            path = directory + '/frame' + str(i) + '.jpg'
+            img = cv2.imread(path)
+            video.write(img)
+            print(i)
+    
+    cv2.destroyAllWindows()
+    video.release()
+
+
+#def make_video(path, name, size, fps = 60):
+#    fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
+#    video = cv2.VideoWriter(name, fourcc, fps, size)
+#    for frame_number in range(1,50):
+#        img = cv2.imread(path + '/frame'+str(frame_number)+'.jpg')
+#        video.write(img)
+#        print(frame_number)
+
+#    cv2.destroyAllWindows()
+#    video.release()

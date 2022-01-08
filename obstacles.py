@@ -49,6 +49,3 @@ class Cuboid:
                          projection(self.vertices[edge[0]], view_angles, origin, scale),
                          projection(self.vertices[edge[1]], view_angles, origin, scale), 4)
 
-    def display(self, scr, colors, view_angles, origin, scale):
-        screen_pos = projection(self.pos, view_angles, origin, scale)
-        pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))

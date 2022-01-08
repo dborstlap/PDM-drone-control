@@ -67,7 +67,6 @@ class Drone:
     ]) * constants.dt
 
     C = np.eye(6)
-
     D = np.zeros((6, 4))
 
     G = np.array([0, 0, 0, 0, 0, -constants.g, 0, 0, 0, 0, 0, 0]) * constants.dt
@@ -85,13 +84,11 @@ class Drone:
         2 * k_M * omega_max ** 2
     ])
 
-    state = np.zeros(12)
-
     # Initialize some drone parameters
-    def __init__(self, X):
-        self.X = np.array(X)
-        self.pos = np.array([X[0], X[1], X[2]])
-        self.drone_rotation_matrix = np.eye(3)
+    def __init__(self, state): # state is initial state space vector, dim = [1x12]
+        self.state = np.array(state)
+        self.history = [self.state] # append each state in time to trace history
+        self.path = [self.state[0:3]] # append each position in time to trace path
 
     def update_state(self, inputs, model='non-linear'):
         """
@@ -135,23 +132,31 @@ class Drone:
         else:
             self.state = self.A @ self.state + self.B @ inputs + self.G
 
+        # update drone parameters for visualisation
+        self.pos = self.state[0:3]
+        self.angles = self.state[6:9]
+        self.path = np.vstack((self.path, self.pos))
+        self.history = np.vstack((self.history, self.state))
+
     # Function to display the drone in pygame
-    def display(self, scr, colors, view_angles, origin, scale):
+    def display(self, scr, colors, view_angles, origin, scale, state):
+        pos = state[0:3]      # drone position [x,y,z]
+        angles = state[6:9]   # drone angles [pitch, roll, yaw]
+        drone_rotation_matrix = rotation_matrix(angles)
 
         # defines current position of rotors
-        rotor_pos_wrt_drone = [np.dot(self.drone_rotation_matrix, [0.1, 0.1, 0]),
-                               np.dot(self.drone_rotation_matrix, [-0.1, -0.1, 0]),
-                               np.dot(self.drone_rotation_matrix, [-0.1, 0.1, 0]),
-                               np.dot(self.drone_rotation_matrix, [0.1, -0.1, 0])]
-        rotor_pos = [self.pos + rotor_pos_wrt_drone[0],
-                     self.pos + rotor_pos_wrt_drone[1],
-                     self.pos + rotor_pos_wrt_drone[2],
-                     self.pos + rotor_pos_wrt_drone[3]]
+        rotor_pos_wrt_drone = [np.dot(drone_rotation_matrix, [0.1, 0.1, 0]),
+                               np.dot(drone_rotation_matrix, [-0.1, -0.1, 0]),
+                               np.dot(drone_rotation_matrix, [-0.1, 0.1, 0]),
+                               np.dot(drone_rotation_matrix, [0.1, -0.1, 0])]
+        rotor_pos = [pos + rotor_pos_wrt_drone[0],
+                     pos + rotor_pos_wrt_drone[1],
+                     pos + rotor_pos_wrt_drone[2],
+                     pos + rotor_pos_wrt_drone[3]]
 
         # draw drone facing direction
-        pg.draw.line(scr, colors.cyan, projection(self.pos, view_angles, origin, scale),
-                     projection(self.pos + np.dot(self.drone_rotation_matrix, [0.1, 0, 0]), view_angles, origin, scale),
-                     5)
+        pg.draw.line(scr, colors.cyan, projection(pos, view_angles, origin, scale),
+                     projection(pos + np.dot(drone_rotation_matrix, [0.1, 0, 0]), view_angles, origin, scale), 5)
 
         # draw drone diagonals
         pg.draw.line(scr, colors.red, projection(rotor_pos[0], view_angles, origin, scale),
@@ -163,28 +168,10 @@ class Drone:
         rotor_radius = 0.05
         for pos in rotor_pos:
             for theta in range(40):
-                circle_pos = pos + np.dot(self.drone_rotation_matrix,
-                                          np.array([sin(theta) * rotor_radius, cos(theta) * rotor_radius, 0]))
+                circle_pos = pos + np.dot(drone_rotation_matrix, np.array([sin(theta) * rotor_radius, cos(theta) * rotor_radius, 0]))
                 projected_circle_pos = projection(circle_pos, view_angles, origin, scale)
                 projected_circle_pos = [int(round(projected_circle_pos[0])), int(round(projected_circle_pos[1]))]
                 pg.draw.circle(scr, colors.white, projected_circle_pos, 1)
 
 
-# for testing only
-x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-quad = Drone([0, 0, 0, 0, 0, 0])
 
-for i in range(20):
-    print('iteration', i)
-
-    u, x = solver.mpc(quad, quad.state, x_target)
-    print('u', u)
-    # print('x', x[0])
-    # print('y', x[1])
-    # print('z', x[2])
-
-    quad.update_state(u, model='non-linear')
-    print('quad state', quad.state)
-    print('')
-    print('')
