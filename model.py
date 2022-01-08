@@ -18,7 +18,7 @@ from functions import rotation_matrix, projection, depth_scale, pressed_keys, co
 
 
 # --------------------------- DRONE CLASS ---------------------------------
-from obstacles import Meteorite, CuboidObstacle
+from obstacles import Meteorite, Cuboid
 
 
 class Drone:
@@ -139,11 +139,10 @@ class Drone:
         # update drone parameters for visualisation
         self.pos = self.state[0:3]
         self.angles = self.state[6:9]
-        self.path = np.vstack((self.path, self.pos))
         self.history = np.vstack((self.history, self.state))
 
     # Function to display the drone in pygame
-    def display(self, scr, colors, view_angles, origin, scale, state):
+    def display(self, scr, colors, view_angles, origin, scale, state, draw_path=True):
         pos = state[0:3]      # drone position [x,y,z]
         angles = state[6:9]   # drone angles [pitch, roll, yaw]
         drone_rotation_matrix = rotation_matrix(angles)
@@ -177,6 +176,13 @@ class Drone:
                 projected_circle_pos = [int(round(projected_circle_pos[0])), int(round(projected_circle_pos[1]))]
                 pg.draw.circle(scr, colors.white, projected_circle_pos, 1)
 
+        # draw path
+        if draw_path:
+            self.path = self.history[:,0:3]
+            for point in self.path:
+                projected_point = projection(point, view_angles, origin, scale)
+                pg.draw.circle(scr, colors.white, projected_point, 1)
+
 
 # for testing only
 x_initial = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -188,7 +194,7 @@ moving_obstacles = [
 ]
 
 static_obstacles = [
-    CuboidObstacle(position=[1.5, 0, 0], dimensions=[1, 1, 2])
+    Cuboid(pos=[1.5, 0, 0], dim=[1, 1, 2])
 ]
 
 T = 30
@@ -234,3 +240,4 @@ for i in range(1000):
         print('')
 
 print('time', time.time() - t_start)
+

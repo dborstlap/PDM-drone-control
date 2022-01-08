@@ -72,6 +72,6 @@ def mpc(quadrotor, x_current, x_target, obstacle_list, meteorites_list, horizon=
 
     # run solver
     problem = cp.Problem(cp.Minimize(cost), constraints)
-    problem.solve(solver=cp.CPLEX, verbose=True)
+    problem.solve(solver=cp.CPLEX)
 
     return u[:, 0].value, x[:, :].value

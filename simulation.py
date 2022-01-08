@@ -12,7 +12,7 @@ pg.init()
 
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors, make_video
 from model import Drone
-from obstacles import Meteorite, CuboidObstacle, Cuboid
+from obstacles import Meteorite, Cuboid
 from visuals import display_explosion
 import solver
 
@@ -26,17 +26,19 @@ if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
 
 scale = 1700
 origin = np.array([100,screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
-view_angles = np.array([np.pi/2+0.1, 0.1, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
+view_angles = np.array([np.pi/2, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
 
-x_current = [3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0]
-x_target = [13, 2, 9, 0, 0, 0, 0, 0.1, 0, 0, 0, 0]
+x_current = [1, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [14, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_current)
+
+obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
 
 meteorites = []
 meteorite_counter = 0
 mouse_position = pg.mouse.get_pos()
 text_fonts = [pg.font.SysFont('HELVETICA', i, bold=True, italic=False) for i in range(40)]
-bbox = Cuboid([15,10,10])
+bbox = Cuboid(dim=[15,10,10])
 meteorite_frequency = 5   # amout of meteorites per second that are created
 colission = 0
 localtime = 100
@@ -88,7 +90,7 @@ while running:
     scr.fill(colors.black)
 
     # boundary box
-    bbox.display(scr, colors, view_angles, origin, scale)
+    bbox.display(scr, colors, view_angles, origin, scale, wireframe=True)
 
     # draw axis of global coordinate system
     pg.draw.line(scr, colors.lime, projection([0,0,0],view_angles,origin,scale), projection([1,0,0],view_angles,origin,scale), 4)
@@ -96,7 +98,7 @@ while running:
     pg.draw.line(scr, colors.lime, projection([0,0,0],view_angles,origin,scale), projection([0,0,1],view_angles,origin,scale), 4)
 
     text_font = text_fonts[20]
-    x_axis_text, y_axis_text, z_axis_text = text_font.render('X', True, colors.lightblue), text_font.render('Y', True, colors.lightblue), text_font.render('Z', True, colors.lightblue)
+    x_axis_text, y_axis_text, z_axis_text = text_font.render('X', True, colors.light_blue), text_font.render('Y', True, colors.light_blue), text_font.render('Z', True, colors.light_blue)
     scr.blit(x_axis_text,x_axis_text.get_rect(center = projection([1.1,0,0],view_angles,origin,scale)))
     scr.blit(y_axis_text,y_axis_text.get_rect(center = projection([0,1.1,0],view_angles,origin,scale)))
     scr.blit(z_axis_text,z_axis_text.get_rect(center = projection([0,0,1.1],view_angles,origin,scale)))
@@ -116,7 +118,7 @@ while running:
     #[m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
 
     #---------------- drone ---------------------  
-    u, x = solver.mpc(quad, quad.state, x_target, [], [])
+    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1], meteorites_list=[])
     quad.update_state(u, model='non-linear')
 
     # display
@@ -125,6 +127,10 @@ while running:
     if np.linalg.norm(quad.state-x_target) < 0.1:
         running = False
         print('ARRIVED :-D')
+
+    #---------------- obstacles ---------------------
+    obstacle1.display(scr, colors, view_angles, origin, scale)
+
 
     # ---------- explosion -------------------
     #for i,m in enumerate(meteorites):
@@ -141,6 +147,7 @@ while running:
 
     # ---------- update -------------------
     pg.display.flip()
+    #print(loop_number)
 
     # ---------- exit -------------------
     for event in events:
@@ -150,12 +157,13 @@ while running:
             running = False
 
 
-
-directory = 'video_frames'
-name = 'video_try69.mp4'
-size = screensize
-fps = 10
-make_video(directory, name, size, fps)
+video = True
+if video:
+    directory = 'video_frames'
+    name = 'video_try69.mp4'
+    size = screensize
+    fps = 10
+    make_video(directory, name, size, fps)
 
 
 
