@@ -17,6 +17,9 @@ from functions import rotation_matrix, projection, depth_scale, pressed_keys, co
 
 
 # --------------------------- DRONE CLASS ---------------------------------
+from obstacles import Meteorite, CuboidObstacle
+
+
 class Drone:
     m = 0.030
     arm_length = 0.046
@@ -88,9 +91,9 @@ class Drone:
     state = np.zeros(12)
 
     # Initialize some drone parameters
-    def __init__(self, X):
-        self.X = np.array(X)
-        self.pos = np.array([X[0], X[1], X[2]])
+    def __init__(self, initial_state):
+        self.state = initial_state
+        self.pos = np.array([initial_state[0], initial_state[1], initial_state[2]])
         self.drone_rotation_matrix = np.eye(3)
 
     def update_state(self, inputs, model='non-linear'):
@@ -171,20 +174,32 @@ class Drone:
 
 
 # for testing only
-x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-quad = Drone([0, 0, 0, 0, 0, 0])
+x_initial = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [5, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+quad = Drone(x_initial)
+
+moving_obstacles = [
+    Meteorite(pos=[3, 0, 2], vel=[0, 0, -0.8], size=0.5)
+]
+
+static_obstacles = [
+    CuboidObstacle(position=[1.5, 0, 0], dimensions=[1, 1, 2])
+]
 
 for i in range(20):
     print('iteration', i)
 
-    u, x = solver.mpc(quad, quad.state, x_target)
-    print('u', u)
+    u, x = solver.mpc(quad, quad.state, x_target, static_obstacles, moving_obstacles)
+    # print('u', u)
     # print('x', x[0])
     # print('y', x[1])
     # print('z', x[2])
 
     quad.update_state(u, model='non-linear')
-    print('quad state', quad.state)
+    print('quad state', quad.state[:3])
+    print('obstacle', moving_obstacles[0].pos)
     print('')
     print('')
+
+    for mo in moving_obstacles:
+        mo.update_position(constants.dt)
