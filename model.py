@@ -6,11 +6,12 @@ function: Contains the drone model
 
 # ---------------------------- IMPORTS ---------------------------------
 import math
+import time
 from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg
-
+import acado
 import constants
 import solver
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
@@ -175,16 +176,42 @@ x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
 
-for i in range(20):
-    print('iteration', i)
+T = 30
 
-    u, x = solver.mpc(quad, quad.state, x_target)
-    print('u', u)
-    # print('x', x[0])
+NX = 12
+NU = 4
+
+x = np.zeros((T + 1, NX))
+u = np.zeros((T, NU))
+Y = np.ones((T, 6 + NU)) * x_target[:10]
+yN = np.ones((1, 6)) * x_target[:6]
+# Y = np.ones((T, 6 + NU)) * [1, 1, 0.5, 0, 0, 0, 0, 0, 0, 0]
+# yN = np.ones((1, 6)) * [1, 1, 0.5, 0, 0, 0]
+Q = np.diag([1, 1, 1, 1, 1, 1, 0.3, 0.3, 0.3, 0.3])
+Qf = np.eye(6)
+
+obstacle = np.array([
+    [1, 2],
+    [1, 2],
+    [1, 2],
+])
+
+t_start = time.time()
+
+for i in range(1000):
+    # u, x = solver.mpc(quad, quad.state, x_target)
+    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacle)
+    # print('u', u[0])
+    # print('x', x[:, :3])
     # print('y', x[1])
     # print('z', x[2])
 
-    quad.update_state(u, model='non-linear')
-    print('quad state', quad.state)
-    print('')
-    print('')
+    quad.update_state(u[0], model='non-linear')
+
+    if i % 100 == 0:
+        print('iteration', i)
+        print('quad state', quad.state)
+        print('')
+        print('')
+
+print('time', time.time() - t_start)
