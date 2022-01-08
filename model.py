@@ -199,7 +199,6 @@ for i in range(20):
     # print('z', x[2])
 
     quad.update_state(u, model='non-linear')
-    print('quad state', quad.state)
     print('quad state', quad.state[:3])
     print('')
     print('')
