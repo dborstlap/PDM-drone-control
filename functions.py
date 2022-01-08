@@ -80,7 +80,7 @@ def pressed_keys():
 class Colors:
   def __init__(self):
     self.white = (255,255,255)
-    self.lightgrey = (208,208,208)
+    self.light_grey = (208,208,208)
     self.grey = (138,138,138)
     self.black = (59,59,64)
     self.brown = (156,113,83)
@@ -90,7 +90,7 @@ class Colors:
     self.lime = (149,218,65)
     self.green = (100,129,56)
     self.cyan = (57,123,149)
-    self.lightblue = (150,185,234)
+    self.light_blue = (150,185,234)
     self.blue = (60,109,181)
     self.purple = (189,124,221)
     self.magenta = (225,143,218)
