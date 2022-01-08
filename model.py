@@ -199,8 +199,6 @@ x = np.zeros((T + 1, NX))
 u = np.zeros((T, NU))
 Y = np.ones((T, 6 + NU)) * x_target[:10]
 yN = np.ones((1, 6)) * x_target[:6]
-# Y = np.ones((T, 6 + NU)) * [1, 1, 0.5, 0, 0, 0, 0, 0, 0, 0]
-# yN = np.ones((1, 6)) * [1, 1, 0.5, 0, 0, 0]
 Q = np.diag([1, 1, 1, 1, 1, 1, 0.3, 0.3, 0.3, 0.3])
 Qf = np.eye(6)
 
