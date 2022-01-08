@@ -44,27 +44,27 @@ class Meteorite:
                                      [pos_expected[2] + self.size]])
 
         constraints += [
-            cube_constraints[0] - x[0, n] + moving_obstacle_slack[0 + j, n] + constants.quadrotor_size
+            cube_constraints[0] - x[0, n] + moving_obstacle_slack[0 + j, n] - constants.quadrotor_size
             >= margin * moving_obstacle_binary[
                 0 + j, n] + 1]
         constraints += [
-            x[0, n] - cube_constraints[1] + moving_obstacle_slack[1 + j, n] + constants.quadrotor_size
+            x[0, n] - cube_constraints[1] + moving_obstacle_slack[1 + j, n] - constants.quadrotor_size
             >= margin * moving_obstacle_binary[
                 1 + j, n] + 1]
         constraints += [
-            cube_constraints[2] - x[1, n] + moving_obstacle_slack[2 + j, n] + constants.quadrotor_size
+            cube_constraints[2] - x[1, n] + moving_obstacle_slack[2 + j, n] - constants.quadrotor_size
             >= margin * moving_obstacle_binary[
                 2 + j, n] + 1]
         constraints += [
-            x[1, n] - cube_constraints[3] + moving_obstacle_slack[3 + j, n] + constants.quadrotor_size
+            x[1, n] - cube_constraints[3] + moving_obstacle_slack[3 + j, n] - constants.quadrotor_size
             >= margin * moving_obstacle_binary[
                 3 + j, n] + 1]
         constraints += [
-            cube_constraints[4] - x[2, n] + moving_obstacle_slack[4 + j, n] + constants.quadrotor_size
+            cube_constraints[4] - x[2, n] + moving_obstacle_slack[4 + j, n] - constants.quadrotor_size
             >= margin * moving_obstacle_binary[
                 4 + j, n] + 1]
         constraints += [
-            x[2, n] - cube_constraints[5] + moving_obstacle_slack[5 + j, n] + constants.quadrotor_size
+            x[2, n] - cube_constraints[5] + moving_obstacle_slack[5 + j, n] - constants.quadrotor_size
             >= margin * moving_obstacle_binary[
                 5 + j, n] + 1]
         # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
@@ -116,22 +116,22 @@ class Cuboid:
         
     def add_constraints(self, x, n, constraints, margin, obstacle_binary, cuboid_slack, j):
         constraints += [
-            self.cube_constraints[0] - x[0, n] + cuboid_slack[0 + j, n] + constants.quadrotor_size
+            self.cube_constraints[0] - x[0, n] + cuboid_slack[0 + j, n] - constants.quadrotor_size
             >= margin * obstacle_binary[0 + j, n]]
         constraints += [
-            x[0, n] - self.cube_constraints[1] + cuboid_slack[1 + j, n] + constants.quadrotor_size
+            x[0, n] - self.cube_constraints[1] + cuboid_slack[1 + j, n] - constants.quadrotor_size
             >= margin * obstacle_binary[1 + j, n]]
         constraints += [
-            self.cube_constraints[2] - x[1, n] + cuboid_slack[2 + j, n] + constants.quadrotor_size
+            self.cube_constraints[2] - x[1, n] + cuboid_slack[2 + j, n] - constants.quadrotor_size
             >= margin * obstacle_binary[2 + j, n]]
         constraints += [
-            x[1, n] - self.cube_constraints[3] + cuboid_slack[3 + j, n] + constants.quadrotor_size
+            x[1, n] - self.cube_constraints[3] + cuboid_slack[3 + j, n] - constants.quadrotor_size
             >= margin * obstacle_binary[3 + j, n]]
         constraints += [
-            self.cube_constraints[4] - x[2, n] + cuboid_slack[4 + j, n] + constants.quadrotor_size
+            self.cube_constraints[4] - x[2, n] + cuboid_slack[4 + j, n] - constants.quadrotor_size
             >= margin * obstacle_binary[4 + j, n]]
         constraints += [
-            x[2, n] - self.cube_constraints[5] + cuboid_slack[5 + j, n] + constants.quadrotor_size
+            x[2, n] - self.cube_constraints[5] + cuboid_slack[5 + j, n] - constants.quadrotor_size
             >= margin * obstacle_binary[5 + j, n]]
         # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
         # least one plane of the obstacle
