@@ -2,6 +2,7 @@
 #include <acado_gnuplot.hpp>
 #include <acado_code_generation.hpp>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 
@@ -44,7 +45,7 @@ int main() {
     Control u4;
 
     // Online data
-    OnlineData obstacle;
+    OnlineData od[1][3];
 
     // Dynamics:
     DifferentialEquation f;
@@ -111,11 +112,21 @@ int main() {
     ocp.subjectTo(-theta_max <= theta <= theta_max);
     ocp.subjectTo(-psi_max <= psi <= psi_max);
 
+    std::cout << od << std::endl;
+
     // obstacle constraints
-    // for(int i = 0; i < NUM_OBST; i++){
-    //   ocp.subjectTo(sqrt((x[0]-obst[i][0])*(x[0]-obst[i][0]) + (x[2]-obst[i][1])*(x[2]-obst[i][1])) >= 0.5);
-    // }
-    ocp.subjectTo(sqrt((x - 1) * (x - 1) + (y - 1) * (y - 1) + (z - 1) * (z - 1)) >= 0.5);
+//     for(int i = 0; i < 1; i++){
+//       ocp.subjectTo(sqrt(
+//           (x - od[i][0]) * (x - od[i][0]) +
+//           (y - od[i][1]) * (y - od[i][1]) +
+//           (z - od[i][2]) * (z - od[i][2]))
+//           >= 0.75
+//       );
+//     }
+
+     ocp.subjectTo(sqrt((x - 1) * (x - 1) + (y - 1) * (y - 1) + (z - 1) * (z - 1)) >= 0.5);
+     ocp.subjectTo(sqrt((x - 2) * (x - 2) + (y - 3) * (y - 3) + (z - 1) * (z - 1)) >= 0.5);
+     ocp.subjectTo(sqrt((x - 0) * (x - 0) + (y - 3) * (y - 3) + (z - 2) * (z - 2)) >= 0.5);
 
     // minimize for cost
     ocp.minimizeLSQ(W, rf);

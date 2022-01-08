@@ -190,17 +190,15 @@ yN = np.ones((1, 6)) * x_target[:6]
 Q = np.diag([1, 1, 1, 1, 1, 1, 0.3, 0.3, 0.3, 0.3])
 Qf = np.eye(6)
 
-obstacle = np.array([
-    [1, 2],
-    [1, 2],
-    [1, 2],
+obstacles = np.array([
+    [2, 2, 2]
 ])
 
 t_start = time.time()
 
 for i in range(1000):
     # u, x = solver.mpc(quad, quad.state, x_target)
-    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacle)
+    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles)
     # print('u', u[0])
     # print('x', x[:, :3])
     # print('y', x[1])

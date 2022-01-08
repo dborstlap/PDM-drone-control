@@ -101,8 +101,8 @@ static PyObject* mpc(PyObject *self, PyObject *args)
     if (!getMatrix(y, acadoVariables.y,   N,   NY, "Y")) return NULL;
     if (!getMatrix(yN, acadoVariables.yN, 1,   NYN,"yN")) return NULL;
     if (!getMatrix(W, acadoVariables.W,   NY*N,NY, "W")) return NULL;
-    if (!getMatrix(WN, acadoVariables.WN, NYN, NYN,"WN")) return NULL;
-    if (!getMatrix(od, acadoVariables.od, NOD*3, 2,"obstacle")) return NULL;
+    if (!getMatrix(WN, acadoVariables.WN, NYN, NYN, "WN")) return NULL;
+    if (!getMatrix(od, acadoVariables.od, 1, 3, "obstacles")) return NULL;
    
     if( verbose == 2 ) acado_printHeader();
     acado_tic( &t );
