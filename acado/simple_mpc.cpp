@@ -45,7 +45,10 @@ int main() {
     Control u4;
 
     // Online data
-    OnlineData od[1][3];
+    OnlineData obs_x;
+    OnlineData obs_y;
+    OnlineData obs_z;
+    OnlineData obs_d;
 
     // Dynamics:
     DifferentialEquation f;
@@ -112,8 +115,6 @@ int main() {
     ocp.subjectTo(-theta_max <= theta <= theta_max);
     ocp.subjectTo(-psi_max <= psi <= psi_max);
 
-    std::cout << od << std::endl;
-
     // obstacle constraints
 //     for(int i = 0; i < 1; i++){
 //       ocp.subjectTo(sqrt(
@@ -124,16 +125,18 @@ int main() {
 //       );
 //     }
 
-     ocp.subjectTo(sqrt((x - 1) * (x - 1) + (y - 1) * (y - 1) + (z - 1) * (z - 1)) >= 0.5);
-     ocp.subjectTo(sqrt((x - 2) * (x - 2) + (y - 3) * (y - 3) + (z - 1) * (z - 1)) >= 0.5);
-     ocp.subjectTo(sqrt((x - 0) * (x - 0) + (y - 3) * (y - 3) + (z - 2) * (z - 2)) >= 0.5);
+    ocp.subjectTo(sqrt((x - obs_x) * (x - obs_x) + (y - obs_y) * (y - obs_y) + (z - obs_y) * (z - obs_y)) - obs_d >= 0);
+
+//     ocp.subjectTo(sqrt((x - 1) * (x - 1) + (y - 1) * (y - 1) + (z - 1) * (z - 1)) >= 0.5);
+//     ocp.subjectTo(sqrt((x - 2) * (x - 2) + (y - 1) * (y - 1) + (z - 0) * (z - 0)) >= 0.5);
+//     ocp.subjectTo(sqrt((x - 0) * (x - 0) + (y - 3) * (y - 3) + (z - 2) * (z - 2)) >= 0.5);
 
     // minimize for cost
     ocp.minimizeLSQ(W, rf);
     ocp.minimizeLSQEndTerm(WN, rfN);
 
     // Export the code:
-    ocp.setNOD(1);
+    ocp.setNOD(4);
     OCPexport mpc(ocp);
 
     mpc.set(HESSIAN_APPROXIMATION, GAUSS_NEWTON);
@@ -147,6 +150,7 @@ int main() {
     mpc.set(GENERATE_MAKE_FILE, YES);
     mpc.set(GENERATE_MATLAB_INTERFACE, YES);
     mpc.set(CG_USE_VARIABLE_WEIGHTING_MATRIX, YES);
+//    mpc.set(CG_HARDCODE_CONSTRAINT_VALUES, NO);
     mpc.set(FIX_INITIAL_STATE, YES);
 
     if (mpc.exportCode("simple_mpc_export") != SUCCESSFUL_RETURN)
