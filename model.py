@@ -190,19 +190,3 @@ static_obstacles = [
     CuboidObstacle(position=[1.5, 0, 0], dimensions=[1, 1, 2])
 ]
 
-for i in range(20):
-    print('iteration', i)
-    u, x = solver.mpc(quad, quad.state, x_target, static_obstacles, moving_obstacles)
-    # print('u', u)
-    # print('x', x[0])
-    # print('y', x[1])
-    # print('z', x[2])
-
-    quad.update_state(u, model='non-linear')
-    print('quad state', quad.state[:3])
-    print('')
-    print('')
-
-    for moving in moving_obstacles:
-        moving.update_position(constants.dt)
-

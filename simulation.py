@@ -12,7 +12,7 @@ pg.init()
 
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors, make_video
 from model import Drone
-from obstacles import Meteorite, Cuboid
+from obstacles import Meteorite, CuboidObstacle, Cuboid
 from visuals import display_explosion
 import solver
 
@@ -102,21 +102,21 @@ while running:
     scr.blit(z_axis_text,z_axis_text.get_rect(center = projection([0,0,1.1],view_angles,origin,scale)))
 
     #---------------- meteorites ------------------------
-    while meteorite_counter < int(loop_number*dt*meteorite_frequency):
-        meteorite_counter += 1
-        meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
-                                    [0, 0, rd.uniform(1.,2.)], 
-                                     rd.uniform(0.2,0.5)))
+    #while meteorite_counter < int(loop_number*dt*meteorite_frequency):
+    #    meteorite_counter += 1
+    #    meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
+    #                                [0, 0, rd.uniform(1.,2.)], 
+    #                                 rd.uniform(0.2,0.5)))
         
-    for i,m in enumerate(meteorites):
-        meteorites[i].update_position(dt)
-        if m.pos[2] < 0: meteorites.pop(i)
+    #for i,m in enumerate(meteorites):
+    #    meteorites[i].update_position(dt)
+    #    if m.pos[2] < 0: meteorites.pop(i)
 
-    # display
-    [m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
+    ## display
+    #[m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
 
     #---------------- drone ---------------------  
-    u, x = solver.mpc(quad, quad.state, x_target)
+    u, x = solver.mpc(quad, quad.state, x_target, [], [])
     quad.update_state(u, model='non-linear')
 
     # display
