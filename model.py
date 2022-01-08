@@ -173,7 +173,7 @@ class Drone:
 
 # for testing only
 x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [5, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone([0, 0, 0, 0, 0, 0])
 
 T = 30
@@ -190,15 +190,24 @@ yN = np.ones((1, 6)) * x_target[:6]
 Q = np.diag([1, 1, 1, 1, 1, 1, 0.3, 0.3, 0.3, 0.3])
 Qf = np.eye(6)
 
+# obstacles = np.array([
+#     np.ones(30) * -1000,
+#     np.ones(30) * -1000,
+#     np.ones(30) * -1000
+# ])
+
 obstacles = np.array([
-    [2, 2, 2]
+    np.ones(30) + 1 + np.arange(0.0, 3.0, 0.1),
+    np.zeros(30) + 2*np.sin(np.arange(0.0, 3.0, 0.1)),
+    np.repeat([0.5], 30),
+    np.ones(30)
 ])
 
 t_start = time.time()
 
 for i in range(1000):
     # u, x = solver.mpc(quad, quad.state, x_target)
-    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles)
+    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
     # print('u', u[0])
     # print('x', x[:, :3])
     # print('y', x[1])
@@ -206,9 +215,9 @@ for i in range(1000):
 
     quad.update_state(u[0], model='non-linear')
 
-    if i % 100 == 0:
+    if i % 10 == 0:
         print('iteration', i)
-        print('quad state', quad.state)
+        print('quad state', quad.state[:3])
         print('')
         print('')
 
