@@ -3,19 +3,18 @@ name:     simulation.py
 authors:  Dries, Wesley, Tanya, Koen
 function: This file can simulate and visualize the drone in pygame 
 """
-
 # ------------------------- IMPORTS --------------------------------
-
 from math import sin, cos
 import numpy as np
 import random as rd
 import pygame as pg
 pg.init()
 
-from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
+from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors, make_video
 from model import Drone
-from obstacles import Meteorite, Cuboid
+from obstacles import Meteorite, CuboidObstacle, Cuboid
 from visuals import display_explosion
+import solver
 
 
 # -------------------------- VARIABLES -------------------------------------------
@@ -25,11 +24,13 @@ screensize = np.array([1280,720])     # if not fullscreen
 if fullscreen: scr = pg.display.set_mode((0, 0), pg.FULLSCREEN)
 if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
 
-
-scale = 1000
+scale = 1700
 origin = np.array([100,screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
-#view_angles = np.array([0.0, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
-view_angles = np.array([np.pi/2, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
+view_angles = np.array([np.pi/2+0.1, 0.1, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
+
+x_current = [3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0]
+x_target = [13, 2, 9, 0, 0, 0, 0, 0.1, 0, 0, 0, 0]
+quad = Drone(x_current)
 
 meteorites = []
 meteorite_counter = 0
@@ -42,11 +43,15 @@ localtime = 100
 
 real_time = True          # If TRUE, simulation runs in real time. If FALSE, simulation will run as fast as possible (as fast as computer can do the calculations)
 dt = 0.1                  # delta t, time interval per iteration
+loop_number = 0           # every loop, 1 will be added
 
 # ------------------------------ RUN LOOP ---------------------------------------
 tprev = pg.time.get_ticks()*0.001
 running = True
 while running:
+
+    # ---------- time -------------------
+    loop_number += 1
     time = pg.time.get_ticks()*0.001
     dt_real = time-tprev
     tprev = time
@@ -78,42 +83,9 @@ while running:
         view_angles += np.dot(np.dot(rotation_matrix(view_angles), [0.01*mouse_movement[1], -0.01*mouse_movement[0], 0]), rotation_matrix(view_angles))
 
 
-    #--------------------------- meteorites ---------------------------
-    while meteorite_counter < int(time*meteorite_frequency):
-        meteorite_counter += 1
-        meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
-                                    [0, 0, rd.uniform(1.,2.)], 
-                                     rd.uniform(0.2,0.5)))
-        
-    for i,m in enumerate(meteorites):
-        meteorites[i].update_position(dt)
-        if m.pos[2] < 0: meteorites.pop(i)
-
-    #--------------------------- drone ---------------------------
-    X = [5,5,5,0,0,0]
-    drone1 = Drone(X)
-
-
-    # ---------- DISPLAY STUFF -------------------
+    #--------------------------- background and axes ---------------------------
     # background
     scr.fill(colors.black)
-
-
-    # explosion
-    for i,m in enumerate(meteorites):
-        if np.linalg.norm(drone1.pos-m.pos) < 1:
-            meteorites.pop(i)
-            colission = True
-        localtime = display_explosion(scr, scale, colission, drone1.pos, dt, localtime, view_angles, origin)
-        colission = False
-
-
-
-    # meteorites
-    [m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
-
-    # drone
-    drone1.display(scr, colors, view_angles, origin, scale)
 
     # boundary box
     bbox.display(scr, colors, view_angles, origin, scale)
@@ -129,9 +101,48 @@ while running:
     scr.blit(y_axis_text,y_axis_text.get_rect(center = projection([0,1.1,0],view_angles,origin,scale)))
     scr.blit(z_axis_text,z_axis_text.get_rect(center = projection([0,0,1.1],view_angles,origin,scale)))
 
-    # update display
+    #---------------- meteorites ------------------------
+    #while meteorite_counter < int(loop_number*dt*meteorite_frequency):
+    #    meteorite_counter += 1
+    #    meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
+    #                                [0, 0, rd.uniform(1.,2.)], 
+    #                                 rd.uniform(0.2,0.5)))
+        
+    #for i,m in enumerate(meteorites):
+    #    meteorites[i].update_position(dt)
+    #    if m.pos[2] < 0: meteorites.pop(i)
+
+    ## display
+    #[m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
+
+    #---------------- drone ---------------------  
+    u, x = solver.mpc(quad, quad.state, x_target, [], [])
+    quad.update_state(u, model='non-linear')
+
+    # display
+    quad.display(scr, colors, view_angles, origin, scale, state=quad.state)
+
+    if np.linalg.norm(quad.state-x_target) < 0.1:
+        running = False
+        print('ARRIVED :-D')
+
+    # ---------- explosion -------------------
+    #for i,m in enumerate(meteorites):
+    #    if np.linalg.norm(drone1.pos-m.pos) < 1:
+    #        meteorites.pop(i)
+    #        colission = True
+    #    localtime = display_explosion(scr, scale, colission, drone1.pos, dt, localtime, view_angles, origin)
+    #    colission = False    
+
+
+    # ---------- video -------------------
+    filename = "frame" + str(loop_number) + ".jpg"
+    pg.image.save(scr, "video_frames/"+filename)
+
+    # ---------- update -------------------
     pg.display.flip()
-    # exit pygame
+
+    # ---------- exit -------------------
     for event in events:
         if event.type == pg.QUIT:
             pg.quit()
@@ -140,8 +151,11 @@ while running:
 
 
 
-
-
+directory = 'video_frames'
+name = 'video_try69.mp4'
+size = screensize
+fps = 10
+make_video(directory, name, size, fps)
 
 
 
