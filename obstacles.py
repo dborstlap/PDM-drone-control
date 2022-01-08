@@ -6,46 +6,121 @@ function: This file contains functions and classes needed to represent and displ
 
 # ------------------------- IMPORTS --------------------------------
 
-from math import sin, cos
 import numpy as np
-import random as rd
 import pygame as pg
 
-from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors
+import constants
+from functions import projection, depth_scale
 
 
 # ---------------------------- METEORITE CLASS ---------------------------------
 class Meteorite:
+    # adds a moving obstacle
     def __init__(self, pos, vel, size):
+        """
+
+        :param pos: x, y, z
+        :param vel: x_dot, y_dot, z_dot
+        :param size: radius
+        """
         self.pos = np.array(pos)
         self.vel = np.array(vel)
         self.size = size
 
     def update_position(self, dt):
-        self.pos[-1] = self.pos[-1] - self.vel[-1] * dt
+        self.pos = self.pos + self.vel * dt
 
     def display(self, scr, colors, view_angles, origin, scale):
         screen_pos = projection(self.pos, view_angles, origin, scale)
         pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
 
+    def add_constraints(self, x, n, constraints, margin, moving_obstacle_binary, moving_obstacle_slack, j):
+        pos_expected = self.pos + constants.dt * n * self.vel
+        cube_constraints = np.array([[pos_expected[0] - self.size],
+                                     [pos_expected[0] + self.size],
+                                     [pos_expected[1] - self.size],
+                                     [pos_expected[1] + self.size],
+                                     [pos_expected[2] - self.size],
+                                     [pos_expected[2] + self.size]])
 
-# ---------------------------- CUBOID (=prism) CLASS ---------------------------------
-class Cuboid:
-    # this part sets all the points x,y,x co-cords at the correct locations
-    #  _____   7____6
-    # |\____\  4____5
-    # |z|    | 3____2
-    # y\|____| 0____1
-    #     x
-    def __init__(self, dimensions):  # vertices must be numpy array
+        constraints += [
+            cube_constraints[0] - x[0, n] + moving_obstacle_slack[0 + j, n] + constants.quadrotor_size
+            >= margin * moving_obstacle_binary[
+                0 + j, n] + 1]
+        constraints += [
+            x[0, n] - cube_constraints[1] + moving_obstacle_slack[1 + j, n] + constants.quadrotor_size
+            >= margin * moving_obstacle_binary[
+                1 + j, n] + 1]
+        constraints += [
+            cube_constraints[2] - x[1, n] + moving_obstacle_slack[2 + j, n] + constants.quadrotor_size
+            >= margin * moving_obstacle_binary[
+                2 + j, n] + 1]
+        constraints += [
+            x[1, n] - cube_constraints[3] + moving_obstacle_slack[3 + j, n] + constants.quadrotor_size
+            >= margin * moving_obstacle_binary[
+                3 + j, n] + 1]
+        constraints += [
+            cube_constraints[4] - x[2, n] + moving_obstacle_slack[4 + j, n] + constants.quadrotor_size
+            >= margin * moving_obstacle_binary[
+                4 + j, n] + 1]
+        constraints += [
+            x[2, n] - cube_constraints[5] + moving_obstacle_slack[5 + j, n] + constants.quadrotor_size
+            >= margin * moving_obstacle_binary[
+                5 + j, n] + 1]
+        # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
+        # least one plane of the obstacle
+        constraints += [
+            moving_obstacle_binary[0 + j, n] + moving_obstacle_binary[1 + j, n] + moving_obstacle_binary[2 + j, n]
+            + moving_obstacle_binary[3 + j, n] + moving_obstacle_binary[4 + j, n] + moving_obstacle_binary[
+                5 + j, n] <= 5]
+
+
+class CuboidObstacle:
+    # Represents static cuboid obstacle
+    def __init__(self, position, dimensions):
+        """
+        :param position: x, y, z
+        :param dimensions: l, w, h
+        """
+        self.pos = np.array(position)
         self.dimensions = dimensions
-        self.vertices = np.array(
-            [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]]) * self.dimensions
-        self.edges = ((0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7))
+        self.cube_constraints = np.array([[self.pos[0] - self.dimensions[0] / 2],
+                                          [self.pos[0] + self.dimensions[0] / 2],
+                                          [self.pos[1] - self.dimensions[1] / 2],
+                                          [self.pos[1] + self.dimensions[1] / 2],
+                                          [self.pos[2] - self.dimensions[2] / 2],
+                                          [self.pos[2] + self.dimensions[2] / 2]])
 
-    def display(self, scr, colors, view_angles, origin, scale):
-        for edge in self.edges:
-            pg.draw.line(scr, colors.white,
-                         projection(self.vertices[edge[0]], view_angles, origin, scale),
-                         projection(self.vertices[edge[1]], view_angles, origin, scale), 4)
+    def add_constraints(self, x, n, constraints, margin, obstacle_binary, cuboid_slack, j):
+        constraints += [
+            self.cube_constraints[0] - x[0, n] + cuboid_slack[0 + j, n] + constants.quadrotor_size
+            >= margin * obstacle_binary[0 + j, n]]
+        constraints += [
+            x[0, n] - self.cube_constraints[1] + cuboid_slack[1 + j, n] + constants.quadrotor_size
+            >= margin * obstacle_binary[1 + j, n]]
+        constraints += [
+            self.cube_constraints[2] - x[1, n] + cuboid_slack[2 + j, n] + constants.quadrotor_size
+            >= margin * obstacle_binary[2 + j, n]]
+        constraints += [
+            x[1, n] - self.cube_constraints[3] + cuboid_slack[3 + j, n] + constants.quadrotor_size
+            >= margin * obstacle_binary[3 + j, n]]
+        constraints += [
+            self.cube_constraints[4] - x[2, n] + cuboid_slack[4 + j, n] + constants.quadrotor_size
+            >= margin * obstacle_binary[4 + j, n]]
+        constraints += [
+            x[2, n] - self.cube_constraints[5] + cuboid_slack[5 + j, n] + constants.quadrotor_size
+            >= margin * obstacle_binary[5 + j, n]]
+        # ensure that at least one binary variable is set to zero for the obstacle, i.e. the obstacle is avoided for at
+        # least one plane of the obstacle
+        constraints += [obstacle_binary[0 + j, n] + obstacle_binary[1 + j, n] + obstacle_binary[2 + j, n]
+                        + obstacle_binary[3 + j, n] + obstacle_binary[4 + j, n] + obstacle_binary[5 + j, n] <= 5]
 
+    # def display(self, scr, colors, view_angles, origin, scale):
+    #     for edge in self.edges:
+    #         pg.draw.line(scr, colors.white,
+    #                      projection(self.vertices[edge[0]], view_angles, origin, scale),
+    #                      projection(self.vertices[edge[1]], view_angles, origin, scale), 4)
+    #
+    # def display(self, scr, colors, view_angles, origin, scale):
+    #     screen_pos = projection(self.pos, view_angles, origin, scale)
+    #     pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))

@@ -17,6 +17,9 @@ from functions import rotation_matrix, projection, depth_scale, pressed_keys, co
 
 
 # --------------------------- DRONE CLASS ---------------------------------
+from obstacles import Meteorite, CuboidObstacle
+
+
 class Drone:
     m = 0.030
     arm_length = 0.046
@@ -174,4 +177,21 @@ class Drone:
                 pg.draw.circle(scr, colors.white, projected_circle_pos, 1)
 
 
+# for testing only
+x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [5, 1, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+quad = Drone([0, 0, 0, 0, 0, 0])
 
+for i in range(20):
+    print('iteration', i)
+
+    u, x = solver.mpc(quad, quad.state, x_target)
+    print('u', u)
+    # print('x', x[0])
+    # print('y', x[1])
+    # print('z', x[2])
+
+    quad.update_state(u, model='non-linear')
+    print('quad state', quad.state)
+    print('')
+    print('')
