@@ -58,7 +58,7 @@ extern "C"
 /** Compute covariance matrix of the last state estimate. */
 #define ACADO_COMPUTE_COVARIANCE_MATRIX 0
 /** Flag indicating whether constraint values are hard-coded or not. */
-#define ACADO_HARDCODED_CONSTRAINT_VALUES 1
+#define ACADO_HARDCODED_CONSTRAINT_VALUES 0
 /** Indicator for fixed initial state. */
 #define ACADO_INITIAL_STATE_FIXED 1
 /** Number of control/estimation intervals. */
@@ -84,7 +84,7 @@ extern "C"
 /** Number of integration steps per shooting interval. */
 #define ACADO_RK_NIS 4
 /** Number of Runge-Kutta stages per integration step. */
-#define ACADO_RK_NSTAGES 2
+#define ACADO_RK_NSTAGES 3
 /** Providing interface for arrival cost. */
 #define ACADO_USE_ARRIVAL_COST 0
 /** Indicator for usage of non-hard-coded linear terms in the objective. */
@@ -146,6 +146,30 @@ real_t WN[ 36 ];
  */
 real_t x0[ 12 ];
 
+/** Column vector of size: 120
+ * 
+ *  Lower bounds values.
+ */
+real_t lbValues[ 120 ];
+
+/** Column vector of size: 120
+ * 
+ *  Upper bounds values.
+ */
+real_t ubValues[ 120 ];
+
+/** Column vector of size: 150
+ * 
+ *  Lower bounds values for affine constraints.
+ */
+real_t lbAValues[ 150 ];
+
+/** Column vector of size: 150
+ * 
+ *  Upper bounds values for affine constraints.
+ */
+real_t ubAValues[ 150 ];
+
 
 } ACADOvariables;
 
@@ -157,45 +181,16 @@ real_t x0[ 12 ];
  */
 typedef struct ACADOworkspace_
 {
-real_t rk_dim24_swap;
-
-/** Column vector of size: 24 */
-real_t rk_dim24_bPerm[ 24 ];
-
-/** Column vector of size: 33 */
-real_t rhs_aux[ 33 ];
+/** Column vector of size: 222 */
+real_t rhs_aux[ 222 ];
 
 real_t rk_ttt;
 
-/** Row vector of size: 20 */
-real_t rk_xxx[ 20 ];
+/** Row vector of size: 212 */
+real_t rk_xxx[ 212 ];
 
-/** Matrix of size: 12 x 2 (row major format) */
-real_t rk_kkk[ 24 ];
-
-/** Matrix of size: 24 x 24 (row major format) */
-real_t rk_A[ 576 ];
-
-/** Column vector of size: 24 */
-real_t rk_b[ 24 ];
-
-/** Row vector of size: 24 */
-int rk_dim24_perm[ 24 ];
-
-/** Column vector of size: 12 */
-real_t rk_rhsTemp[ 12 ];
-
-/** Matrix of size: 2 x 192 (row major format) */
-real_t rk_diffsTemp2[ 384 ];
-
-/** Matrix of size: 12 x 2 (row major format) */
-real_t rk_diffK[ 24 ];
-
-/** Matrix of size: 12 x 16 (row major format) */
-real_t rk_diffsPrev2[ 192 ];
-
-/** Matrix of size: 12 x 16 (row major format) */
-real_t rk_diffsNew2[ 192 ];
+/** Matrix of size: 3 x 204 (row major format) */
+real_t rk_kkk[ 612 ];
 
 /** Row vector of size: 212 */
 real_t state[ 212 ];
@@ -290,8 +285,8 @@ real_t pacA01Dx0[ 30 ];
 /** Matrix of size: 120 x 120 (row major format) */
 real_t H[ 14400 ];
 
-/** Matrix of size: 120 x 120 (row major format) */
-real_t A[ 14400 ];
+/** Matrix of size: 150 x 120 (row major format) */
+real_t A[ 18000 ];
 
 /** Column vector of size: 120 */
 real_t g[ 120 ];
@@ -302,17 +297,17 @@ real_t lb[ 120 ];
 /** Column vector of size: 120 */
 real_t ub[ 120 ];
 
-/** Column vector of size: 120 */
-real_t lbA[ 120 ];
+/** Column vector of size: 150 */
+real_t lbA[ 150 ];
 
-/** Column vector of size: 120 */
-real_t ubA[ 120 ];
+/** Column vector of size: 150 */
+real_t ubA[ 150 ];
 
 /** Column vector of size: 120 */
 real_t x[ 120 ];
 
-/** Column vector of size: 240 */
-real_t y[ 240 ];
+/** Column vector of size: 270 */
+real_t y[ 270 ];
 
 
 } ACADOworkspace;
@@ -324,7 +319,7 @@ real_t y[ 240 ];
 
 /** Performs the integration and sensitivity propagation for one shooting interval.
  *
- *  \param rk_eta Working array of size 20 to pass the input values and return the results.
+ *  \param rk_eta Working array to pass the input values and return the results.
  *  \param resetIntegrator The internal memory of the integrator can be reset.
  *
  *  \return Status code of the integrator.
@@ -336,14 +331,7 @@ int acado_integrate( real_t* const rk_eta, int resetIntegrator );
  *  \param in Input to the exported function.
  *  \param out Output of the exported function.
  */
-void acado_rhs(const real_t* in, real_t* out);
-
-/** Export of an ACADO symbolic function.
- *
- *  \param in Input to the exported function.
- *  \param out Output of the exported function.
- */
-void acado_diffs(const real_t* in, real_t* out);
+void acado_rhs_forw(const real_t* in, real_t* out);
 
 /** Preparation step of the RTI scheme.
  *

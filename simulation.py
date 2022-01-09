@@ -5,9 +5,14 @@ function: This file can simulate and visualize the drone in pygame
 """
 # ------------------------- IMPORTS --------------------------------
 from math import sin, cos
+
+import acado
 import numpy as np
 import random as rd
 import pygame as pg
+
+import constants
+
 pg.init()
 
 from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors, make_video
@@ -25,16 +30,21 @@ if fullscreen: scr = pg.display.set_mode((0, 0), pg.FULLSCREEN)
 if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
 
 scale = 1700
-origin = np.array([100,screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
+origin = np.array([100, screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
 view_angles = np.array([np.pi/2, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
 
-x_current = [1, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [14, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+# x_current = [1, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [10, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+# x_target = [10, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_current)
 
 obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
 
-meteorites = []
+meteorites = [
+    Meteorite([3, 0, 1], [1, 1.5, 0.5], 1)
+]
+
 meteorite_counter = 0
 mouse_position = pg.mouse.get_pos()
 text_fonts = [pg.font.SysFont('HELVETICA', i, bold=True, italic=False) for i in range(40)]
@@ -43,8 +53,21 @@ meteorite_frequency = 5   # amout of meteorites per second that are created
 colission = 0
 localtime = 100
 
+T = 30
+NX = 12
+NU = 4
+
+x = np.zeros((T + 1, NX))
+u = np.zeros((T, NU))
+Y = np.ones((T, 6 + NU)) * x_target[:10]
+yN = np.ones((1, 6)) * x_target[:6]
+Q_x = 1
+Q_u = 0.80
+Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u])
+Qf = np.eye(6)
+
 real_time = True          # If TRUE, simulation runs in real time. If FALSE, simulation will run as fast as possible (as fast as computer can do the calculations)
-dt = 0.1                  # delta t, time interval per iteration
+dt = constants.dt         # delta t, time interval per iteration
 loop_number = 0           # every loop, 1 will be added
 
 # ------------------------------ RUN LOOP ---------------------------------------
@@ -58,7 +81,7 @@ while running:
     dt_real = time-tprev
     tprev = time
 
-    time_difference = int((dt-dt_real)*1000) # how much faster the computer computes the iteration then the defined dt per iteration (in µs)
+    time_difference = int((dt-dt_real) * 1) # how much faster the computer computes the iteration then the defined dt per iteration (in µs)
     if time_difference > 0 and real_time == True:
         pg.time.delay(time_difference)
 
@@ -109,17 +132,42 @@ while running:
     #    meteorites.append(Meteorite([rd.uniform(0, bbox.dimensions[0]), rd.uniform(0, bbox.dimensions[1]), bbox.dimensions[2]],
     #                                [0, 0, rd.uniform(1.,2.)], 
     #                                 rd.uniform(0.2,0.5)))
-        
-    #for i,m in enumerate(meteorites):
-    #    meteorites[i].update_position(dt)
-    #    if m.pos[2] < 0: meteorites.pop(i)
+
+    for i, m in enumerate(meteorites):
+        meteorites[i].update_position(dt)
+        if m.pos[2] < 0:
+            meteorites.pop(i)
 
     ## display
     #[m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
 
+
+    #---------------- obstacles ---------------------
+    # obstacle1.display(scr, colors, view_angles, origin, scale)
+    for meteorite in meteorites:
+        meteorite.display(scr, colors, view_angles, origin, scale)
+
     #---------------- drone ---------------------  
-    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1], meteorites_list=[])
-    quad.update_state(u, model='non-linear')
+    # u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1], meteorites_list=[])
+    # quad.update_state(u, model='non-linear')
+
+    obstacles = np.array([
+        np.ones(T) * meteorites[0].pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+        meteorites[0].vel[0],
+        np.ones(T) * meteorites[0].pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+        meteorites[0].vel[1],
+        np.ones(T) * meteorites[0].pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+        meteorites[0].vel[2],
+        np.ones(T) * meteorites[0].size + constants.quadrotor_size
+    ])
+
+    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
+    quad.update_state(u[0], model='non-linear')
+
+    for i in range(T):
+        p_x = projection([x[i, 0], x[i, 1], x[i, 2]], view_angles, origin, scale)
+        pg.draw.circle(scr, colors.lime, p_x, 2)
+
 
     # display
     quad.display(scr, colors, view_angles, origin, scale, state=quad.state)
@@ -127,9 +175,6 @@ while running:
     if np.linalg.norm(quad.state-x_target) < 0.1:
         running = False
         print('ARRIVED :-D')
-
-    #---------------- obstacles ---------------------
-    obstacle1.display(scr, colors, view_angles, origin, scale)
 
 
     # ---------- explosion -------------------
@@ -162,7 +207,7 @@ if video:
     directory = 'video_frames'
     name = 'video_try69.mp4'
     size = screensize
-    fps = 10
+    fps = 60
     make_video(directory, name, size, fps)
 
 

@@ -2,7 +2,8 @@
 #include <acado_gnuplot.hpp>
 #include <acado_code_generation.hpp>
 #include <cmath>
-#include <iostream>
+#include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -38,6 +39,7 @@ int main() {
     DifferentialState phi_dot;
     DifferentialState theta_dot;
     DifferentialState psi_dot;
+    DifferentialState dummy;
 
     Control u1;
     Control u2;
@@ -45,10 +47,10 @@ int main() {
     Control u4;
 
     // Online data
-    OnlineData obs_x;
-    OnlineData obs_y;
-    OnlineData obs_z;
-    OnlineData obs_d;
+    OnlineData obs_1_x;
+    OnlineData obs_1_y;
+    OnlineData obs_1_z;
+    OnlineData obs_1_d;
 
     // Dynamics:
     DifferentialEquation f;
@@ -75,7 +77,7 @@ int main() {
     const double u3_max = L * k_F * pow(omega_max, 2);
     const double u4_max = 2 * k_M * pow(omega_max, 2);
 
-    const double phi_max = asin(m * g);
+    const double phi_max = asin(1/2.5);
     const double theta_max = phi_max;
     const double psi_max = 2 / 9 * M_PI;
 
@@ -95,7 +97,7 @@ int main() {
 
     // Cost weights
     BMatrix W = eye<bool>(rf.getDim());
-    BMatrix WN = eye<bool>(rf.getDim()-4);
+    BMatrix WN = eye<bool>(rf.getDim() - 4);
 
     for (int i=6; i < rf.getDim(); i++) {
         W(i, i) = 0.3;
@@ -111,25 +113,13 @@ int main() {
     ocp.subjectTo(u2_min <= u2 <= u2_max);
     ocp.subjectTo(u3_min <= u3 <= u3_max);
     ocp.subjectTo(u4_min <= u4 <= u4_max);
+    ocp.subjectTo(z >= 0);
     ocp.subjectTo(-phi_max <= phi <= phi_max);
     ocp.subjectTo(-theta_max <= theta <= theta_max);
     ocp.subjectTo(-psi_max <= psi <= psi_max);
 
     // obstacle constraints
-//     for(int i = 0; i < 1; i++){
-//       ocp.subjectTo(sqrt(
-//           (x - od[i][0]) * (x - od[i][0]) +
-//           (y - od[i][1]) * (y - od[i][1]) +
-//           (z - od[i][2]) * (z - od[i][2]))
-//           >= 0.75
-//       );
-//     }
-
-    ocp.subjectTo(sqrt((x - obs_x) * (x - obs_x) + (y - obs_y) * (y - obs_y) + (z - obs_y) * (z - obs_y)) - obs_d >= 0);
-
-//     ocp.subjectTo(sqrt((x - 1) * (x - 1) + (y - 1) * (y - 1) + (z - 1) * (z - 1)) >= 0.5);
-//     ocp.subjectTo(sqrt((x - 2) * (x - 2) + (y - 1) * (y - 1) + (z - 0) * (z - 0)) >= 0.5);
-//     ocp.subjectTo(sqrt((x - 0) * (x - 0) + (y - 3) * (y - 3) + (z - 2) * (z - 2)) >= 0.5);
+    ocp.subjectTo(sqrt((x - obs_1_x) * (x - obs_1_x) + (y - obs_1_y) * (y - obs_1_y) + (z - obs_1_z) * (z - obs_1_z)) - obs_1_d >= 0);
 
     // minimize for cost
     ocp.minimizeLSQ(W, rf);
@@ -141,16 +131,16 @@ int main() {
 
     mpc.set(HESSIAN_APPROXIMATION, GAUSS_NEWTON);
     mpc.set(DISCRETIZATION_TYPE, MULTIPLE_SHOOTING);
-    mpc.set(INTEGRATOR_TYPE, INT_IRK_RIIA3);
+    mpc.set(INTEGRATOR_TYPE, INT_RK45);
     mpc.set(NUM_INTEGRATOR_STEPS, N * Ni);
     mpc.set(SPARSE_QP_SOLUTION, FULL_CONDENSING);
     mpc.set(QP_SOLVER, QP_QPOASES);
     mpc.set(HOTSTART_QP, YES);
-    mpc.set(GENERATE_TEST_FILE, YES);
-    mpc.set(GENERATE_MAKE_FILE, YES);
-    mpc.set(GENERATE_MATLAB_INTERFACE, YES);
+//    mpc.set(GENERATE_TEST_FILE, YES);
+//    mpc.set(GENERATE_MAKE_FILE, YES);
+//    mpc.set(GENERATE_MATLAB_INTERFACE, YES);
     mpc.set(CG_USE_VARIABLE_WEIGHTING_MATRIX, YES);
-//    mpc.set(CG_HARDCODE_CONSTRAINT_VALUES, NO);
+    mpc.set(CG_HARDCODE_CONSTRAINT_VALUES, NO);
     mpc.set(FIX_INITIAL_STATE, YES);
 
     if (mpc.exportCode("simple_mpc_export") != SUCCESSFUL_RETURN)

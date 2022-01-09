@@ -186,58 +186,65 @@ class Drone:
 
 # for testing only
 x_initial = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [5, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+# x_target = [10, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_initial)
-
-moving_obstacles = [
-    Meteorite(pos=[3, 0, 2], vel=[0, 0, -0.8], size=0.5)
-]
-
-static_obstacles = [
-    Cuboid(pos=[1.5, 0, 0], dim=[1, 1, 2])
-]
-
-T = 30
-NX = 12
-NU = 4
-
-x = np.zeros((T + 1, NX))
-u = np.zeros((T, NU))
-Y = np.ones((T, 6 + NU)) * x_target[:10]
-yN = np.ones((1, 6)) * x_target[:6]
-Q = np.diag([1, 1, 1, 1, 1, 1, 0.3, 0.3, 0.3, 0.3])
-Qf = np.eye(6)
-
+#
+# moving_obstacles = [
+#     Meteorite(pos=[3, 0, 2], vel=[0, 0, -0.8], size=0.5)
+# ]
+#
+# static_obstacles = [
+#     Cuboid(pos=[1.5, 0, 0], dim=[1, 1, 2])
+# ]
+#
+# T = 30
+# NX = 12
+# NU = 4
+#
+# x = np.zeros((T + 1, NX))
+# u = np.zeros((T, NU))
+# Y = np.ones((T, 6 + NU)) * x_target[:10]
+# yN = np.ones((1, 6)) * x_target[:6]
+# Q = np.diag([1, 1, 1, 1, 1, 1, 0.3, 0.3, 0.3, 0.3])
+# Qf = np.eye(6)
+#
+# meteorites = [
+#     Meteorite([4, 0, 0], [1, 1, 1], 1)
+# ]
+#
 # obstacles = np.array([
-#     np.ones(30) * -1000,
-#     np.ones(30) * -1000,
-#     np.ones(30) * -1000
+#     np.ones(T) * meteorites[0].pos[0] + np.arange(0, T*0.1, 0.1) * meteorites[0].vel[0],
+#     np.ones(T) * meteorites[0].pos[1] + np.arange(0, T*0.1, 0.1) * meteorites[0].vel[0],
+#     np.ones(T) * meteorites[0].pos[2] + np.arange(0, T*0.1, 0.1) * meteorites[0].vel[0],
+#     np.ones(T) * meteorites[0].size + constants.quadrotor_size
 # ])
+#
+# print(obstacles)
 
-obstacles = np.array([
-    np.ones(30) + 1 + np.arange(0.0, 3.0, 0.1),
-    np.zeros(30) + 2*np.sin(np.arange(0.0, 3.0, 0.1)),
-    np.repeat([0.5], 30),
-    np.ones(30)
-])
-
-t_start = time.time()
-
-for i in range(1000):
-    # u, x = solver.mpc(quad, quad.state, x_target)
-    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
-    # print('u', u[0])
-    # print('x', x[:, :3])
-    # print('y', x[1])
-    # print('z', x[2])
-
-    quad.update_state(u[0], model='non-linear')
-
-    if i % 10 == 0:
-        print('iteration', i)
-        print('quad state', quad.state[:3])
-        print('')
-        print('')
-
-print('time', time.time() - t_start)
-
+#
+# obstacles = np.array([
+#     np.ones(30) * meteorites[0].pos[0],
+#     np.ones(30) * meteorites[0].pos[1],
+#     np.ones(30) * meteorites[0].pos[2],
+#     np.ones(30) * meteorites[0].size + constants.quadrotor_size
+# ])
+#
+# t_start = time.time()
+#
+# for i in range(1000):
+#     # u, x = solver.mpc(quad, quad.state, x_target)
+#     x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
+#     # print('u', u[0])
+#     # print('x', x[:, :3])
+#     # print('y', x[1])
+#     # print('z', x[2])
+#
+#     quad.update_state(u[0], model='non-linear')
+#
+#     if i % 10 == 0:
+#         print('iteration', i)
+#         print('quad state', quad.state[:3])
+#         print('')
+#         print('')
+#
+# print('time', time.time() - t_start)
