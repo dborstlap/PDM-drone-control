@@ -46,6 +46,8 @@ int main() {
     Control u3;
     Control u4;
 
+    Control slack_1;
+
     // Online data
     OnlineData obs_1_x;
     OnlineData obs_1_y;
@@ -66,6 +68,7 @@ int main() {
     f << dot(phi_dot) == (-I_yy + I_zz) / I_xx * theta * psi + u2 / I_xx;
     f << dot(theta_dot) == (I_xx - I_zz) / I_yy * phi * psi + u3 / I_yy;
     f << dot(psi_dot) == (-I_xx + I_yy) / I_zz * phi * theta + u4 / I_zz;
+    f << dot(dummy) == slack_1;
 
     // Actuation limits
     const double u1_min = 0;
@@ -87,7 +90,8 @@ int main() {
     Function rf;
     Function rfN;
 
-    rf << x << y << z << x_dot << y_dot << z_dot << u1 << u2 << u3 << u4;
+    rf << x << y << z << x_dot << y_dot << z_dot << u1 << u2 << u3 << u4 << slack_1;
+//    rf << x << y << z << x_dot << y_dot << z_dot << u1 << u2 << u3 << u4;
     rfN << x << y << z << x_dot << y_dot << z_dot;
 
     // horizon
@@ -97,11 +101,11 @@ int main() {
 
     // Cost weights
     BMatrix W = eye<bool>(rf.getDim());
-    BMatrix WN = eye<bool>(rf.getDim() - 4);
+    BMatrix WN = eye<bool>(rfN.getDim());
 
-    for (int i=6; i < rf.getDim(); i++) {
-        W(i, i) = 0.3;
-    }
+//    for (int i=6; i < 12; i++) {
+//        W(i, i) = 0.3;
+//    }
 
     OCP ocp(0, N * dt, N);
 
@@ -114,12 +118,14 @@ int main() {
     ocp.subjectTo(u3_min <= u3 <= u3_max);
     ocp.subjectTo(u4_min <= u4 <= u4_max);
     ocp.subjectTo(z >= 0);
+    ocp.subjectTo(slack_1 >= 0);
     ocp.subjectTo(-phi_max <= phi <= phi_max);
     ocp.subjectTo(-theta_max <= theta <= theta_max);
     ocp.subjectTo(-psi_max <= psi <= psi_max);
 
     // obstacle constraints
-    ocp.subjectTo(sqrt((x - obs_1_x) * (x - obs_1_x) + (y - obs_1_y) * (y - obs_1_y) + (z - obs_1_z) * (z - obs_1_z)) - obs_1_d >= 0);
+//    ocp.subjectTo(sqrt((x - obs_1_x) * (x - obs_1_x) + (y - obs_1_y) * (y - obs_1_y) + (z - obs_1_z) * (z - obs_1_z)) - obs_1_d >= 0);
+    ocp.subjectTo(sqrt((x - obs_1_x) * (x - obs_1_x) + (y - obs_1_y) * (y - obs_1_y) + (z - obs_1_z) * (z - obs_1_z)) + slack_1 - obs_1_d >= 0);
 
     // minimize for cost
     ocp.minimizeLSQ(W, rf);

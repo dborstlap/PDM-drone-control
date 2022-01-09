@@ -185,9 +185,12 @@ class Drone:
 
 
 # for testing only
-x_initial = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+# x_initial = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 # x_target = [10, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-quad = Drone(x_initial)
+# quad = Drone(x_initial)
+#
+# print(np.array([np.array(np.hstack((quad.state, 0)))]))
+# print(np.array([quad.state]))
 #
 # moving_obstacles = [
 #     Meteorite(pos=[3, 0, 2], vel=[0, 0, -0.8], size=0.5)

@@ -41,8 +41,10 @@ quad = Drone(x_current)
 
 obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
 
+filler = Meteorite([-10000, -10000, -10000], [0, 0, 0], 1)
+
 meteorites = [
-    Meteorite([3, 0, 1], [1, 1.5, 0.5], 1)
+    Meteorite([3, 0, 2.5], [0.25, 1, 0], 1)
 ]
 
 meteorite_counter = 0
@@ -54,16 +56,16 @@ colission = 0
 localtime = 100
 
 T = 30
-NX = 12
-NU = 4
+NX = 13
+NU = 5
 
 x = np.zeros((T + 1, NX))
 u = np.zeros((T, NU))
-Y = np.ones((T, 6 + NU)) * x_target[:10]
+Y = np.ones((T, 6 + NU)) * x_target[:11]
 yN = np.ones((1, 6)) * x_target[:6]
 Q_x = 1
 Q_u = 0.80
-Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u])
+Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u, 1000])
 Qf = np.eye(6)
 
 real_time = True          # If TRUE, simulation runs in real time. If FALSE, simulation will run as fast as possible (as fast as computer can do the calculations)
@@ -152,16 +154,28 @@ while running:
     # quad.update_state(u, model='non-linear')
 
     obstacles = np.array([
-        np.ones(T) * meteorites[0].pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
-        meteorites[0].vel[0],
-        np.ones(T) * meteorites[0].pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
-        meteorites[0].vel[1],
-        np.ones(T) * meteorites[0].pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
-        meteorites[0].vel[2],
-        np.ones(T) * meteorites[0].size + constants.quadrotor_size
+        np.ones(T) * filler.pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+        filler.vel[0],
+        np.ones(T) * filler.pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+        filler.vel[1],
+        np.ones(T) * filler.pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+        filler.vel[2],
+        np.ones(T) * filler.size + constants.quadrotor_size
     ])
 
-    x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
+    for meteorite in meteorites:
+        obstacles = np.array([
+            np.ones(T) * meteorite.pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+            meteorite.vel[0],
+            np.ones(T) * meteorite.pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+            meteorite.vel[1],
+            np.ones(T) * meteorite.pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) *
+            meteorite.vel[2],
+            np.ones(T) * meteorite.size + constants.quadrotor_size
+        ])
+
+    x, u = acado.mpc(0, 1, np.array([np.array(np.hstack((quad.state, 0)))]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
+    # x, u = acado.mpc(0, 1, np.array([quad.state]), x, u, Y, yN, np.transpose(np.tile(Q, T)), Qf, 0, obstacles.T)
     quad.update_state(u[0], model='non-linear')
 
     for i in range(T):
@@ -202,7 +216,7 @@ while running:
             running = False
 
 
-video = True
+video = False
 if video:
     directory = 'video_frames'
     name = 'video_try69.mp4'
