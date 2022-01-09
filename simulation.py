@@ -25,23 +25,24 @@ if fullscreen: scr = pg.display.set_mode((0, 0), pg.FULLSCREEN)
 if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
 
 scale = 1700
-origin = np.array([100,screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
-view_angles = np.array([np.pi/2, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
+origin = np.array([100,screensize[1]-50])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
+view_angles = np.array([np.pi/2+0.1, 0.2, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
 
-x_current = [1, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_start = [1, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 x_target = [14, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-quad = Drone(x_current)
+quad = Drone(x_start)
 
-obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
+obstacle1 = Cuboid(dim=[2,10,3], pos = [4,0,0], edge_color=colors.blue, face_color=colors.light_blue)
+obstacle2 = Cuboid(dim=[2,10,6], pos = [10,0,4], edge_color=colors.green, face_color=colors.lime)
+bbox = Cuboid(dim=[15,10,10])
 
 meteorites = []
 meteorite_counter = 0
 mouse_position = pg.mouse.get_pos()
 text_fonts = [pg.font.SysFont('HELVETICA', i, bold=True, italic=False) for i in range(40)]
-bbox = Cuboid(dim=[15,10,10])
 meteorite_frequency = 5   # amout of meteorites per second that are created
 colission = 0
-localtime = 100
+video = True
 
 real_time = True          # If TRUE, simulation runs in real time. If FALSE, simulation will run as fast as possible (as fast as computer can do the calculations)
 dt = 0.1                  # delta t, time interval per iteration
@@ -81,7 +82,6 @@ while running:
     if mouse_clicks[2] == 1:
         mouse_movement = np.array(mouse_position)-np.array(previous_mouse_position)
 
-        something = np.dot([[1, 0, 0], [0, 1, 0]], rotation_matrix(view_angles))
         view_angles += np.dot(np.dot(rotation_matrix(view_angles), [0.01*mouse_movement[1], -0.01*mouse_movement[0], 0]), rotation_matrix(view_angles))
 
 
@@ -90,7 +90,7 @@ while running:
     scr.fill(colors.black)
 
     # boundary box
-    bbox.display(scr, colors, view_angles, origin, scale, wireframe=True)
+    bbox.display(scr, view_angles, origin, scale, wireframe=True)
 
     # draw axis of global coordinate system
     pg.draw.line(scr, colors.lime, projection([0,0,0],view_angles,origin,scale), projection([1,0,0],view_angles,origin,scale), 4)
@@ -115,35 +115,40 @@ while running:
     #    if m.pos[2] < 0: meteorites.pop(i)
 
     ## display
-    #[m.display(scr, colors, view_angles, origin, scale) for m in meteorites]
+    #[m.display(scr, view_angles, origin, scale) for m in meteorites]
 
     #---------------- drone ---------------------  
-    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1], meteorites_list=[])
+    pg.draw.circle(scr, colors.lime, projection(x_start[0:3], view_angles, origin, scale), 10)
+    pg.draw.circle(scr, colors.red, projection(x_target[0:3], view_angles, origin, scale), 10)
+    
+    u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1,obstacle2], meteorites_list=[])
     quad.update_state(u, model='non-linear')
-
+    
     # display
-    quad.display(scr, colors, view_angles, origin, scale, state=quad.state)
+    quad.display(scr, view_angles, origin, scale, state=quad.state)
 
     if np.linalg.norm(quad.state-x_target) < 0.1:
         running = False
         print('ARRIVED :-D')
 
-    #---------------- obstacles ---------------------
-    obstacle1.display(scr, colors, view_angles, origin, scale)
 
+    #---------------- obstacles ---------------------
+    obstacle1.display(scr, view_angles, origin, scale)
+    obstacle2.display(scr, view_angles, origin, scale)
 
     # ---------- explosion -------------------
     #for i,m in enumerate(meteorites):
     #    if np.linalg.norm(drone1.pos-m.pos) < 1:
     #        meteorites.pop(i)
     #        colission = True
-    #    localtime = display_explosion(scr, scale, colission, drone1.pos, dt, localtime, view_angles, origin)
+    #    localtime = display_explosion(scr, scale, colission, drone1.pos, dt, 100, view_angles, origin)
     #    colission = False    
 
 
     # ---------- video -------------------
-    filename = "frame" + str(loop_number) + ".jpg"
-    pg.image.save(scr, "video_frames/"+filename)
+    if video:
+        filename = "frame" + str(loop_number) + ".jpg"
+        pg.image.save(scr, "video_frames/"+filename)
 
     # ---------- update -------------------
     pg.display.flip()
@@ -157,10 +162,9 @@ while running:
             running = False
 
 
-video = True
 if video:
     directory = 'video_frames'
-    name = 'video_try69.mp4'
+    name = 'video_try24.mp4'
     size = screensize
     fps = 10
     make_video(directory, name, size, fps)

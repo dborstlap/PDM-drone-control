@@ -30,7 +30,7 @@ class Meteorite:
     def update_position(self, dt):
         self.pos = self.pos + self.vel * dt
 
-    def display(self, scr, colors, view_angles, origin, scale):
+    def display(self, scr, view_angles, origin, scale):
         screen_pos = projection(self.pos, view_angles, origin, scale)
         pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
 
@@ -139,7 +139,7 @@ class Cuboid:
                         + obstacle_binary[3 + j, n] + obstacle_binary[4 + j, n] + obstacle_binary[5 + j, n] <= 5]
         
     
-    def display(self, scr, colors, view_angles, origin, scale, wireframe=False):
+    def display(self, scr, view_angles, origin, scale, wireframe=False):
         if wireframe == False:
             for face in self.faces:
                 points = [projection(point, view_angles, origin, scale) for point in face]

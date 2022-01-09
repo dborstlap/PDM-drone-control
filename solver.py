@@ -63,7 +63,7 @@ def mpc(quadrotor, x_current, x_target, obstacle_list, meteorites_list, horizon=
             meteorites_list[i].add_constraints(x, n, constraints, margin, meteorite_binary, meteorite_slack, j)
 
         if len(obstacle_list) > 0:
-            constraints += [cuboid_slack[:, n] >= np.zeros(6)]
+            constraints += [cuboid_slack[:, n] >= np.zeros(6*len(obstacle_list))]
         if len(meteorites_list) > 0:
             constraints += [meteorite_slack[:, n] >= np.zeros(6)]
 

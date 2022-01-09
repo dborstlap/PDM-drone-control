@@ -140,7 +140,7 @@ class Drone:
         self.history = np.vstack((self.history, self.state))
 
     # Function to display the drone in pygame
-    def display(self, scr, colors, view_angles, origin, scale, state, draw_path=True):
+    def display(self, scr, view_angles, origin, scale, state, draw_path=True):
         pos = state[0:3]      # drone position [x,y,z]
         angles = state[6:9]   # drone angles [pitch, roll, yaw]
         drone_rotation_matrix = rotation_matrix(angles)
