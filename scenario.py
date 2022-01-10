@@ -26,6 +26,17 @@ def dense_scenario():
     ]
 
 
+def dense_scenario_with_static():
+    return [
+        Meteorite([4, 6, 2.5], [0.75, -2.5, 0.5], 1),
+        Meteorite([1, 6, 1.5], [0, 0, 0], 2),
+        Meteorite([4, 6, 2.5], [0.25, -0.75, -0.25], 2),
+        Meteorite([5, 2, 0.0], [-0.5, 0.5, 0.75], 1.5),
+        Meteorite([3, 0, 2.5], [0, 0.5, -0.25], 1),
+        Meteorite([1, 4, 0.5], [0.5, -0.25, 0.25], 1.5)
+    ]
+
+
 def dense_fast():
     return [
         Meteorite([1, 3, 0.5], [0, 0, 0], 1.5),
@@ -50,23 +61,23 @@ def dense_extra_fast():
 
 def dense_extra_fast_small_far():
     return [
-        Meteorite([1, 3, 0.5], [0, -0.125, 0], 1.0),
+        Meteorite([1, 3, 0.5], [1, -1, 0], 1.0),
         Meteorite([3, 4.5, 1.0], [0, 0, 0], 1.0),
         Meteorite([3, 6, 2.5], [-1, -3, 0], 1.0),
-        Meteorite([1, 6, 2.5], [-0.25, -2.0, -0.50], 1.0),
-        Meteorite([5, 6, 2.5], [-0.25, -3.0, -0.50], 1.0),
-        Meteorite([4, 6, 2.5], [0.5, -1.0, -0.55], 1.0)
+        Meteorite([1, 6, 2.5], [-0.25, -5.0, -1.50], 1.0),
+        Meteorite([4, 6, 2.5], [0.5, -1.0, -0.55], 1.0),
+        Meteorite([0, 0, 3], [0, 0, -2], 1.0),
     ]
 
 
 def dense_extra_fast_small():
     return [
-        Meteorite([1, 3, 0.5], [0, -0.125, 0], 0.5),
+        Meteorite([2, 3, 0.5], [0, -0.125, 0], 0.5),
         Meteorite([3, 4.5, 1.0], [0, 0, 0], 0.5),
-        Meteorite([3, 3, 1.0], [-1, -3, 0], 0.5),
+        Meteorite([3, 5, 1.0], [-1, -3, 0], 0.5),
         Meteorite([1, 3, 1.5], [-0.25, -2.0, -0.50], 0.5),
         Meteorite([3, 3, 2.0], [-0.25, -3.0, -0.50], 0.5),
-        Meteorite([3, 3, 2.0], [0.5, -1.0, -0.55], 0.5)
+        Meteorite([3, 1, 2.0], [-0.5, -1.0, -0.55], 0.5)
     ]
 
 

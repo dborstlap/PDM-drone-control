@@ -33,6 +33,7 @@ class Meteorite:
     def display(self, scr, colors, view_angles, origin, scale):
         screen_pos = projection(self.pos, view_angles, origin, scale)
         pg.draw.circle(scr, colors.grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale))
+        pg.draw.circle(scr, colors.dark_grey, screen_pos, self.size * scale * depth_scale(self.pos, view_angles, scale), width=2)
 
     def add_constraints(self, x, n, constraints, margin, moving_obstacle_binary, moving_obstacle_slack, j):
         pos_expected = self.pos + constants.dt * n * self.vel
@@ -91,14 +92,15 @@ class Cuboid:
                       self.vertices[[1, 2]], 
                       self.vertices[[2, 3]], 
                       self.vertices[[3, 0]], 
-                      self.vertices[[4, 5]], 
-                      self.vertices[[5, 6]], 
-                      self.vertices[[6, 7]], 
-                      self.vertices[[7, 4]], 
-                      self.vertices[[0, 4]], 
-                      self.vertices[[1, 5]], 
-                      self.vertices[[2, 6]], 
-                      self.vertices[[3, 7]])
+                      # self.vertices[[4, 5]],
+                      # self.vertices[[5, 6]],
+                      # self.vertices[[6, 7]],
+                      # self.vertices[[7, 4]],
+                      # self.vertices[[0, 4]],
+                      # self.vertices[[1, 5]],
+                      # self.vertices[[2, 6]],
+                      # self.vertices[[3, 7]]
+                      )
         self.faces = [self.vertices[[0,1,2,3]], 
                       self.vertices[[4,5,6,7]], 
                       self.vertices[[0,1,5,4]], 
@@ -146,6 +148,6 @@ class Cuboid:
                 pg.draw.polygon(scr, self.face_color, points)
         
         for edge in self.edges:
-            pg.draw.line(scr, self.edge_color, projection(edge[0], view_angles, origin, scale), projection(edge[1], view_angles, origin, scale), 4)
+            pg.draw.line(scr, self.edge_color, projection(edge[0], view_angles, origin, scale), projection(edge[1], view_angles, origin, scale), 1)
 
     

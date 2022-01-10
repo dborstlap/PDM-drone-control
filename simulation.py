@@ -11,7 +11,7 @@ import pygame as pg
 import acado
 import constants
 from scenario import default_obstacle_set, default_scenario, dense_scenario, dense_fast, dense_extra_fast, \
-    dense_extra_fast_medium, dense_extra_fast_small, dense_extra_fast_small_far
+    dense_extra_fast_medium, dense_extra_fast_small, dense_extra_fast_small_far, dense_scenario_with_static
 
 pg.init()
 
@@ -21,12 +21,16 @@ from obstacles import Cuboid
 
 # -------------------------- VARIABLES -------------------------------------------
 x_target = [5, 5, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+# x_target = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_current)
 
 # meteorites = dense_extra_fast_small_far()
 # meteorites = dense_extra_fast_medium()
-meteorites = dense_scenario()
+meteorites = dense_extra_fast_small()
+# meteorites = dense_scenario_with_static()
+# meteorites = dense_fast()
+# meteorites = default_scenario()
 
 T = 40
 NX = 13
@@ -53,6 +57,7 @@ if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
 scale = 1700
 origin = np.array([100, screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
 view_angles = np.array([np.pi/2, 0, 0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
+# view_angles = np.array([0, np.pi/6, np.pi/6])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
 
 obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
 
@@ -143,8 +148,6 @@ while running:
 
     #---------------- obstacles ---------------------
     # obstacle1.display(scr, colors, view_angles, origin, scale)
-    # for meteorite in meteorites:
-
 
     #---------------- drone ---------------------  
     # u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1], meteorites_list=[])
@@ -162,16 +165,18 @@ while running:
 
     meteorites_subset = meteorites
 
-    for meteorite in meteorites:
-        meteorite.display(scr, colors, view_angles, origin, scale)
+    # for meteorite in meteorites:
+    #     meteorite.display(scr, colors, view_angles, origin, scale)
 
-    meteorites_subset = []
-    for meteorite in meteorites:
-        if (np.linalg.norm(quad.state[:3] - meteorite.pos)) < 3.0:
-            meteorites_subset.append(meteorite)
+    # meteorites_subset = []
+    # for meteorite in meteorites:
+    #     if (np.linalg.norm(quad.pos - meteorite.pos)) < 3.0:
+    #         meteorites_subset.append(meteorite)
 
-    for i in range(len(meteorites_subset)):
-        # meteorites[i].display(scr, colors, view_angles, origin, scale)
+    sorted_meteorites = np.array(sorted(meteorites_subset, key=lambda x: np.linalg.norm(x.pos)))
+
+    for i in range(len(sorted_meteorites)):
+        meteorites[i].display(scr, colors, view_angles, origin, scale)
         o_start = i*4
         o_end = o_start+4
         obstacles[o_start:o_end] = np.array([
@@ -231,10 +236,10 @@ while running:
             running = False
 
 
-video = False
+video = True
 if video:
     directory = 'video_frames'
-    name = 'video_02.mp4'
+    name = 'video_01.mp4'
     size = screensize
     fps = 60
     make_video(directory, name, size, fps)

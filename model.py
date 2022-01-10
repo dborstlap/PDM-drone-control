@@ -93,6 +93,7 @@ class Drone:
         self.state = np.array(state)
         self.history = [self.state] # append each state in time to trace history
         self.path = [self.state[0:3]] # append each position in time to trace path
+        self.pos = state[:3]
 
     def update_state(self, inputs, model='non-linear'):
         """
