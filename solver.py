@@ -2,7 +2,7 @@ import numpy as np
 import cvxpy as cp
 
 Q = np.eye(3)
-R = np.eye(4) * 0.3
+R = np.eye(4) * 10
 
 
 def mpc(quadrotor, x_current, x_target, obstacle_list, meteorites_list, horizon=50):
