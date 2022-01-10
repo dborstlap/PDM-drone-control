@@ -48,7 +48,29 @@ def dense_extra_fast():
     ]
 
 
+def dense_extra_fast_small_far():
+    return [
+        Meteorite([1, 3, 0.5], [0, -0.125, 0], 1.0),
+        Meteorite([3, 4.5, 1.0], [0, 0, 0], 1.0),
+        Meteorite([3, 6, 2.5], [-1, -3, 0], 1.0),
+        Meteorite([1, 6, 2.5], [-0.25, -2.0, -0.50], 1.0),
+        Meteorite([5, 6, 2.5], [-0.25, -3.0, -0.50], 1.0),
+        Meteorite([4, 6, 2.5], [0.5, -1.0, -0.55], 1.0)
+    ]
+
+
 def dense_extra_fast_small():
+    return [
+        Meteorite([1, 3, 0.5], [0, -0.125, 0], 0.5),
+        Meteorite([3, 4.5, 1.0], [0, 0, 0], 0.5),
+        Meteorite([3, 3, 1.0], [-1, -3, 0], 0.5),
+        Meteorite([1, 3, 1.5], [-0.25, -2.0, -0.50], 0.5),
+        Meteorite([3, 3, 2.0], [-0.25, -3.0, -0.50], 0.5),
+        Meteorite([3, 3, 2.0], [0.5, -1.0, -0.55], 0.5)
+    ]
+
+
+def dense_extra_fast_medium():
     return [
         Meteorite([1, 3, 0.5], [0, -0.125, 0], 1.5),
         Meteorite([3, 4.5, 1.0], [0, 0, 0], 1.5),

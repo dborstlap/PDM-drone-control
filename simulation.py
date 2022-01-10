@@ -11,7 +11,7 @@ import pygame as pg
 import acado
 import constants
 from scenario import default_obstacle_set, default_scenario, dense_scenario, dense_fast, dense_extra_fast, \
-    dense_extra_fast_small
+    dense_extra_fast_medium, dense_extra_fast_small, dense_extra_fast_small_far
 
 pg.init()
 
@@ -20,11 +20,13 @@ from model import Drone
 from obstacles import Cuboid
 
 # -------------------------- VARIABLES -------------------------------------------
-x_target = [5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [5, 5, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_current)
 
-meteorites = dense_extra_fast_small()
+# meteorites = dense_extra_fast_small_far()
+# meteorites = dense_extra_fast_medium()
+meteorites = dense_scenario()
 
 T = 40
 NX = 13
@@ -43,7 +45,7 @@ Qf = np.eye(6)
 
 
 fullscreen = False # full screen does not seem to work accurately in pygame??
-screensize = np.array([1280,720])     # if not fullscreen
+screensize = np.array([1280, 720])     # if not fullscreen
 
 if fullscreen: scr = pg.display.set_mode((0, 0), pg.FULLSCREEN)
 if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
@@ -141,8 +143,8 @@ while running:
 
     #---------------- obstacles ---------------------
     # obstacle1.display(scr, colors, view_angles, origin, scale)
-    for meteorite in meteorites:
-        meteorite.display(scr, colors, view_angles, origin, scale)
+    # for meteorite in meteorites:
+
 
     #---------------- drone ---------------------  
     # u, x = solver.mpc(quad, quad.state, x_target, obstacle_list=[obstacle1], meteorites_list=[])
@@ -152,7 +154,24 @@ while running:
     # ACADO expects a fixed amount of obstacles, hence use a default set of obstacles out of range of the work area
     # and overwrite as needed
     obstacles = default_obstacle_set(n_obstacles, T)
-    for i in range(len(meteorites)):
+
+    # if loop_number < 75:
+    #     meteorites_subset = meteorites[:2]
+    # else:
+    #     meteorites_subset = meteorites
+
+    meteorites_subset = meteorites
+
+    for meteorite in meteorites:
+        meteorite.display(scr, colors, view_angles, origin, scale)
+
+    meteorites_subset = []
+    for meteorite in meteorites:
+        if (np.linalg.norm(quad.state[:3] - meteorite.pos)) < 3.0:
+            meteorites_subset.append(meteorite)
+
+    for i in range(len(meteorites_subset)):
+        # meteorites[i].display(scr, colors, view_angles, origin, scale)
         o_start = i*4
         o_end = o_start+4
         obstacles[o_start:o_end] = np.array([
