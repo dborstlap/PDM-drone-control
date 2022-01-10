@@ -4,25 +4,42 @@ authors:  Dries, Wesley, Tanya, Koen
 function: This file can simulate and visualize the drone in pygame 
 """
 # ------------------------- IMPORTS --------------------------------
-from math import sin, cos
 
-import acado
 import numpy as np
-import random as rd
 import pygame as pg
 
+import acado
 import constants
+from scenario import default_obstacle_set, four_meteorites
 
 pg.init()
 
-from functions import rotation_matrix, projection, depth_scale, pressed_keys, colors, make_video
+from functions import rotation_matrix, projection, colors, make_video
 from model import Drone
-from obstacles import Meteorite, Cuboid
-from visuals import display_explosion
-import solver
-
+from obstacles import Cuboid
 
 # -------------------------- VARIABLES -------------------------------------------
+x_target = [10, 10, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+quad = Drone(x_current)
+
+meteorites = four_meteorites()
+
+T = 40
+NX = 13
+NU = 4
+n_obstacles = 4
+
+x = np.zeros((T + 1, NX))
+u = np.zeros((T, NU + n_obstacles))
+Y = np.ones((T, 6 + NU + n_obstacles)) * np.hstack((x_target[:6], np.repeat(0, NU + n_obstacles)))
+yN = np.ones((1, 6)) * x_target[:6]
+Q_x = 1
+Q_u = 0.9
+Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u, 10000, 10000, 10000, 10000])
+Qf = np.eye(6)
+
+
 fullscreen = False # full screen does not seem to work accurately in pygame??
 screensize = np.array([1280,720])     # if not fullscreen
 
@@ -33,20 +50,7 @@ scale = 1700
 origin = np.array([100, screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
 view_angles = np.array([np.pi/2, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
 
-# x_current = [1, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_target = [10, 10, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-# x_target = [10, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-quad = Drone(x_current)
-
 obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
-
-meteorites = [
-    Meteorite([4, 6, 2.5], [-0.25, -2.5, 0.5], 1),
-    Meteorite([1, 6, 1.5], [2.5, 0, 0], 2),
-    Meteorite([4, 6, 4.5], [0, 0, 0], 2),
-    Meteorite([5, 2, 0.0], [0, 0, 0], 1.5)
-]
 
 meteorite_counter = 0
 mouse_position = pg.mouse.get_pos()
@@ -56,19 +60,6 @@ meteorite_frequency = 5   # amout of meteorites per second that are created
 collision = 0
 localtime = 100
 
-T = 40
-NX = 13
-NU = 8
-
-x = np.zeros((T + 1, NX))
-u = np.zeros((T, NU))
-Y = np.ones((T, 6 + NU)) * np.hstack((x_target[:6], [0, 0, 0, 0, 0, 0, 0, 0]))
-yN = np.ones((1, 6)) * x_target[:6]
-Q_x = 1
-Q_u = 0.9
-Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u, 10000, 10000, 10000, 10000])
-Qf = np.eye(6)
-
 real_time = True          # If TRUE, simulation runs in real time. If FALSE, simulation will run as fast as possible (as fast as computer can do the calculations)
 dt = constants.dt         # delta t, time interval per iteration
 loop_number = 0           # every loop, 1 will be added
@@ -76,29 +67,6 @@ loop_number = 0           # every loop, 1 will be added
 # ------------------------------ RUN LOOP ---------------------------------------
 tprev = pg.time.get_ticks()*0.001
 running = True
-
-
-def default_obstacle_set():
-    filler = Meteorite([-10000, -10000, -10000], [0, 0, 0], 1)
-    return np.array([
-        np.ones(T) * filler.pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[0],
-        np.ones(T) * filler.pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[1],
-        np.ones(T) * filler.pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[2],
-        np.ones(T) * filler.size + constants.quadrotor_size,
-        np.ones(T) * filler.pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[0],
-        np.ones(T) * filler.pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[1],
-        np.ones(T) * filler.pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[2],
-        np.ones(T) * filler.size + constants.quadrotor_size,
-        np.ones(T) * filler.pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[0],
-        np.ones(T) * filler.pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[1],
-        np.ones(T) * filler.pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[2],
-        np.ones(T) * filler.size + constants.quadrotor_size,
-        np.ones(T) * filler.pos[0] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[0],
-        np.ones(T) * filler.pos[1] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[1],
-        np.ones(T) * filler.pos[2] + np.arange(0, T * constants.dt_solver, constants.dt_solver) * filler.vel[2],
-        np.ones(T) * filler.size + constants.quadrotor_size,
-    ])
-
 
 while running:
 
@@ -181,7 +149,7 @@ while running:
     # populate obstacles
     # ACADO expects a fixed amount of obstacles, hence use a default set of obstacles out of range of the work area
     # and overwrite as needed
-    obstacles = default_obstacle_set()
+    obstacles = default_obstacle_set(n_obstacles, T)
     for i in range(len(meteorites)):
         o_start = i*4
         o_end = o_start+4
