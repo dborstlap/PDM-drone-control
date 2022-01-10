@@ -161,7 +161,10 @@ int main() {
     ocp.subjectTo(u2_min <= u2 <= u2_max);
     ocp.subjectTo(u3_min <= u3 <= u3_max);
     ocp.subjectTo(u4_min <= u4 <= u4_max);
-    ocp.subjectTo(z >= 0);
+//    ocp.subjectTo(z >= 0);
+    ocp.subjectTo(-0.5 <= x <= 5.5);
+    ocp.subjectTo(-0.5 <= y <= 5.5);
+    ocp.subjectTo(0.0 <= z <= 3.0);
     ocp.subjectTo(slack_1 >= 0);
     ocp.subjectTo(slack_2 >= 0);
     ocp.subjectTo(slack_3 >= 0);

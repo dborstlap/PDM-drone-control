@@ -10,7 +10,8 @@ import pygame as pg
 
 import acado
 import constants
-from scenario import default_obstacle_set, four_meteorites
+from scenario import default_obstacle_set, default_scenario, dense_scenario, dense_fast, dense_extra_fast, \
+    dense_extra_fast_small
 
 pg.init()
 
@@ -23,7 +24,7 @@ x_target = [5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_current)
 
-meteorites = four_meteorites()
+meteorites = dense_extra_fast_small()
 
 T = 40
 NX = 13
@@ -34,10 +35,10 @@ x = np.zeros((T + 1, NX))
 u = np.zeros((T, NU + n_obstacles))
 Y = np.ones((T, 6 + NU + n_obstacles)) * np.hstack((x_target[:6], np.repeat(0, NU + n_obstacles)))
 yN = np.ones((1, 6)) * x_target[:6]
-Q_x = 1
-Q_u = 0.9
+Q_x = 0.99
+Q_u = 1 - Q_x
 Q_o = 10000
-Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u, Q_o, Q_o, Q_o, Q_o, Q_o, Q_o])
+Q = np.diag(np.hstack((np.repeat(Q_x, 6), np.repeat(Q_u, 4), np.repeat(Q_o, 6))))
 Qf = np.eye(6)
 
 
@@ -49,14 +50,14 @@ if not fullscreen: scr = pg.display.set_mode((screensize[0],screensize[1]))
 
 scale = 1700
 origin = np.array([100, screensize[1]-100])        # w.r.t. left upper corner of screen, should be np.array([screensize[0]/2,screensize[0]/2]) for MACHINE VISION to be centered
-view_angles = np.array([np.pi/2, 0.0, 0.0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
+view_angles = np.array([np.pi/2, 0, 0])    # viewing angles of general coordinate frame, should be np.array([0,0,0]) for MACHINE VISION
 
 obstacle1 = Cuboid(dim=[2,10,2], pos = [7,0,0], edge_color=colors.blue, face_color=colors.light_blue)
 
 meteorite_counter = 0
 mouse_position = pg.mouse.get_pos()
 text_fonts = [pg.font.SysFont('HELVETICA', i, bold=True, italic=False) for i in range(40)]
-bbox = Cuboid(dim=[15,10,10])
+bbox = Cuboid(dim=[5, 5, 3])
 meteorite_frequency = 5   # amout of meteorites per second that are created
 collision = 0
 localtime = 100
@@ -214,7 +215,7 @@ while running:
 video = False
 if video:
     directory = 'video_frames'
-    name = 'video_try69.mp4'
+    name = 'video_02.mp4'
     size = screensize
     fps = 60
     make_video(directory, name, size, fps)
