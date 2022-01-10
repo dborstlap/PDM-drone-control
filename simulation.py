@@ -19,7 +19,7 @@ from model import Drone
 from obstacles import Cuboid
 
 # -------------------------- VARIABLES -------------------------------------------
-x_target = [10, 10, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+x_target = [5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 x_current = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 quad = Drone(x_current)
 
@@ -28,7 +28,7 @@ meteorites = four_meteorites()
 T = 40
 NX = 13
 NU = 4
-n_obstacles = 4
+n_obstacles = 6
 
 x = np.zeros((T + 1, NX))
 u = np.zeros((T, NU + n_obstacles))
@@ -36,7 +36,8 @@ Y = np.ones((T, 6 + NU + n_obstacles)) * np.hstack((x_target[:6], np.repeat(0, N
 yN = np.ones((1, 6)) * x_target[:6]
 Q_x = 1
 Q_u = 0.9
-Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u, 10000, 10000, 10000, 10000])
+Q_o = 10000
+Q = np.diag([Q_x, Q_x, Q_x, Q_x, Q_x, Q_x, Q_u, Q_u, Q_u, Q_u, Q_o, Q_o, Q_o, Q_o, Q_o, Q_o])
 Qf = np.eye(6)
 
 
