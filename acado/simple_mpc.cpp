@@ -47,12 +47,28 @@ int main() {
     Control u4;
 
     Control slack_1;
+    Control slack_2;
+    Control slack_3;
+    Control slack_4;
 
     // Online data
+    int N_ONLINE = 16;
     OnlineData obs_1_x;
     OnlineData obs_1_y;
     OnlineData obs_1_z;
     OnlineData obs_1_d;
+    OnlineData obs_2_x;
+    OnlineData obs_2_y;
+    OnlineData obs_2_z;
+    OnlineData obs_2_d;
+    OnlineData obs_3_x;
+    OnlineData obs_3_y;
+    OnlineData obs_3_z;
+    OnlineData obs_3_d;
+    OnlineData obs_4_x;
+    OnlineData obs_4_y;
+    OnlineData obs_4_z;
+    OnlineData obs_4_d;
 
     // Dynamics:
     DifferentialEquation f;
@@ -68,7 +84,7 @@ int main() {
     f << dot(phi_dot) == (-I_yy + I_zz) / I_xx * theta * psi + u2 / I_xx;
     f << dot(theta_dot) == (I_xx - I_zz) / I_yy * phi * psi + u3 / I_yy;
     f << dot(psi_dot) == (-I_xx + I_yy) / I_zz * phi * theta + u4 / I_zz;
-    f << dot(dummy) == slack_1;
+    f << dot(dummy) == slack_1 + slack_2 + slack_3 + slack_4;
 
     // Actuation limits
     const double u1_min = 0;
@@ -80,7 +96,8 @@ int main() {
     const double u3_max = L * k_F * pow(omega_max, 2);
     const double u4_max = 2 * k_M * pow(omega_max, 2);
 
-    const double phi_max = asin(1/2.5);
+//    const double phi_max = asin(1/2.5);
+    const double phi_max = 0.40;
     const double theta_max = phi_max;
     const double psi_max = 2 / 9 * M_PI;
 
@@ -90,12 +107,12 @@ int main() {
     Function rf;
     Function rfN;
 
-    rf << x << y << z << x_dot << y_dot << z_dot << u1 << u2 << u3 << u4 << slack_1;
+    rf << x << y << z << x_dot << y_dot << z_dot << u1 << u2 << u3 << u4 << slack_1 << slack_2 << slack_3 << slack_4;
 //    rf << x << y << z << x_dot << y_dot << z_dot << u1 << u2 << u3 << u4;
     rfN << x << y << z << x_dot << y_dot << z_dot;
 
     // horizon
-    const int N = 30;
+    const int N = 40;
     // integration steps
     const int Ni = 4;
 
@@ -126,13 +143,16 @@ int main() {
     // obstacle constraints
 //    ocp.subjectTo(sqrt((x - obs_1_x) * (x - obs_1_x) + (y - obs_1_y) * (y - obs_1_y) + (z - obs_1_z) * (z - obs_1_z)) - obs_1_d >= 0);
     ocp.subjectTo(sqrt((x - obs_1_x) * (x - obs_1_x) + (y - obs_1_y) * (y - obs_1_y) + (z - obs_1_z) * (z - obs_1_z)) + slack_1 - obs_1_d >= 0);
+    ocp.subjectTo(sqrt((x - obs_2_x) * (x - obs_2_x) + (y - obs_2_y) * (y - obs_2_y) + (z - obs_2_z) * (z - obs_2_z)) + slack_2 - obs_2_d >= 0);
+    ocp.subjectTo(sqrt((x - obs_3_x) * (x - obs_3_x) + (y - obs_3_y) * (y - obs_3_y) + (z - obs_3_z) * (z - obs_3_z)) + slack_3 - obs_3_d >= 0);
+    ocp.subjectTo(sqrt((x - obs_4_x) * (x - obs_4_x) + (y - obs_4_y) * (y - obs_4_y) + (z - obs_4_z) * (z - obs_4_z)) + slack_4 - obs_4_d >= 0);
 
     // minimize for cost
     ocp.minimizeLSQ(W, rf);
     ocp.minimizeLSQEndTerm(WN, rfN);
 
     // Export the code:
-    ocp.setNOD(4);
+    ocp.setNOD(N_ONLINE);
     OCPexport mpc(ocp);
 
     mpc.set(HESSIAN_APPROXIMATION, GAUSS_NEWTON);
